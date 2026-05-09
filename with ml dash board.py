@@ -122,7 +122,7 @@ model = joblib.load(MODEL_PATH)
 
 label_encoder = joblib.load(ENCODER_PATH)
 
-# ================= ALL PREDICTIONS =================
+# ================= PREDICT ALL DATA =================
 
 predict_df = df[
     [
@@ -222,6 +222,10 @@ if "history_log" not in st.session_state:
 if "warning_history" not in st.session_state:
 
     st.session_state.warning_history = []
+
+if "last_warning_signature" not in st.session_state:
+
+    st.session_state.last_warning_signature = None
 
 # ================= REMOVE WARNINGS OLDER THAN 48 HOURS =================
 
@@ -413,6 +417,15 @@ if prediction.lower() != "normal":
         else sl_time.strftime("%H:%M:%S")
     )
 
+    warning_signature = (
+
+        f"{warning_date}_"
+        f"{warning_time}_"
+        f"{faulty_f}_"
+        f"{prediction}"
+
+    )
+
     warning = {
 
         "date":
@@ -428,30 +441,21 @@ if prediction.lower() != "normal":
         prediction
     }
 
-    already_exists = False
+    if (
 
-    for old_warn in st.session_state.warning_history:
+        st.session_state.last_warning_signature
+        !=
+        warning_signature
 
-        if (
-
-            old_warn["date"] == warning["date"]
-            and
-            old_warn["time"] == warning["time"]
-            and
-            old_warn["feeder"] == warning["feeder"]
-            and
-            old_warn["fault"] == warning["fault"]
-
-        ):
-
-            already_exists = True
-            break
-
-    if not already_exists:
+    ):
 
         st.session_state.warning_history.insert(
             0,
             warning
+        )
+
+        st.session_state.last_warning_signature = (
+            warning_signature
         )
 
 # ================= LAYOUT =================
@@ -633,32 +637,6 @@ with left_main:
 
             use_container_width=True,
             height=400
-        )
-
-    # ================= DETECTED ANOMALIES =================
-
-    st.write("---")
-
-    st.subheader(
-        "🚨 Detected Anomalies"
-    )
-
-    anomalies_df = df[
-        df["Prediction"].str.lower() != "normal"
-    ]
-
-    if len(anomalies_df) > 0:
-
-        st.dataframe(
-            anomalies_df,
-            use_container_width=True,
-            height=300
-        )
-
-    else:
-
-        st.success(
-            "✅ No Anomalies Detected"
         )
 
 # ================= RIGHT PANEL =================
