@@ -3,8 +3,8 @@ import pandas as pd
 import time
 import os
 import joblib
-import pytz
 from datetime import datetime
+from zoneinfo import ZoneInfo
 
 # ================= PAGE CONFIG =================
 
@@ -16,8 +16,9 @@ st.set_page_config(
 
 # ================= SRI LANKA TIME =================
 
-sri_lanka = pytz.timezone("Asia/Colombo")
-sl_time = datetime.now(sri_lanka)
+sl_time = datetime.now(
+    ZoneInfo("Asia/Colombo")
+)
 
 # ================= CSS =================
 
@@ -112,13 +113,9 @@ h2,h3{
 # ================= FILE PATHS =================
 
 DATASET_PATH = "future_grid_test_dataset.csv"
-
 MODEL_PATH = "xgb_model.pkl"
-
 ENCODER_PATH = "label_encoder.pkl"
-
 HISTORY_FILE = "grid_history_log.xlsx"
-
 STATE_FILE = "grid_state.csv"
 
 # ================= CHECK FILES =================
@@ -176,11 +173,13 @@ def load_history():
     if os.path.exists(HISTORY_FILE):
 
         try:
+
             return pd.read_excel(
                 HISTORY_FILE
             ).to_dict("records")
 
         except:
+
             return []
 
     return []
@@ -308,17 +307,19 @@ prediction = row["Prediction"]
 
 faulty_f = ""
 
-if pd.notna(row["Fault_Feeder"]):
+if "Fault_Feeder" in df.columns:
 
-    faulty_f = str(
-        row["Fault_Feeder"]
-    ).strip()
+    if pd.notna(row["Fault_Feeder"]):
+
+        faulty_f = str(
+            row["Fault_Feeder"]
+        ).strip()
 
 # ================= HISTORY =================
 
 fixed_time = datetime.fromtimestamp(
     st.session_state.next_update_time - update_interval,
-    sri_lanka
+    ZoneInfo("Asia/Colombo")
 )
 
 logged_date = fixed_time.strftime("%Y-%m-%d")
@@ -508,6 +509,7 @@ with left_main:
     )
 
     if time_left < 0:
+
         time_left = 0
 
     minutes = time_left // 60
@@ -587,10 +589,10 @@ with right_main:
         warning = {
 
             "date":
-            row["Date"],
+            row["Date"] if "Date" in df.columns else sl_time.strftime("%Y-%m-%d"),
 
             "time":
-            row["Time"],
+            row["Time"] if "Time" in df.columns else sl_time.strftime("%H:%M:%S"),
 
             "feeder":
             faulty_f,
