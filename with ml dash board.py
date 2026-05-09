@@ -71,7 +71,7 @@ h2,h3{
 .warning-box{
     color:white;
     padding:20px;
-    border-radius:16px;
+    border-radius:20px;
     margin-bottom:15px;
     font-weight:bold;
     line-height:1.8;
@@ -593,17 +593,12 @@ with right_main:
                 <br>
 
                 📅 {warn['date']}
-
                 <br>
-
                 🕒 {warn['time']}
-
                 <br>
 
                 📡 {warn['feeder']}
-
                 <br>
-
                 🚨 {warn['fault']}
 
                 </div>
