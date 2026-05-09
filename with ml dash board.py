@@ -13,18 +13,16 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# ---------------- RESPONSIVE CSS ----------------
+# ---------------- CSS ----------------
 
 st.markdown("""
 <style>
 
-/* BACKGROUND */
 .stApp{
     background-color:#0b1220;
     color:white;
 }
 
-/* MAIN PADDING */
 .block-container{
     padding-top:1rem;
     padding-bottom:1rem;
@@ -32,19 +30,15 @@ st.markdown("""
     padding-right:2rem;
 }
 
-/* TITLE */
 h1{
     font-size: clamp(28px, 4vw, 52px) !important;
     color:white !important;
 }
 
-/* SUBHEADERS */
 h2,h3{
-    font-size: clamp(18px, 2vw, 32px) !important;
     color:white !important;
 }
 
-/* METRIC BOX */
 [data-testid="metric-container"]{
     background:#111827;
     border-radius:16px;
@@ -52,72 +46,16 @@ h2,h3{
     border:1px solid #1f2937;
 }
 
-/* METRIC LABEL */
-[data-testid="stMetricLabel"]{
-    font-size: clamp(12px, 1vw, 18px);
-}
-
-/* METRIC VALUE */
 [data-testid="stMetricValue"]{
     font-size: clamp(22px, 2vw, 40px);
 }
 
-/* ALERT BOX */
-.stAlert{
-    border-radius:14px;
-}
-
-/* WARNING PANEL */
-.warning-box{
-    color:white;
-    padding:20px;
-    border-radius:20px;
-    margin-bottom:15px;
-    font-weight:bold;
-    line-height:1.8;
-    font-size: clamp(14px, 1vw, 20px);
-    box-shadow:0px 0px 10px rgba(255,0,0,0.4);
-}
-
-/* SCENARIO BOX */
 .scenario-box{
     padding:14px;
     border-radius:12px;
     text-align:center;
     font-weight:bold;
     color:white;
-    font-size: clamp(12px, 1vw, 18px);
-}
-
-/* MOBILE */
-@media (max-width:768px){
-
-    .block-container{
-        padding-left:1rem;
-        padding-right:1rem;
-    }
-
-    h1{
-        font-size:28px !important;
-    }
-
-    .warning-box{
-        font-size:14px;
-        padding:14px;
-    }
-}
-
-/* LARGE SCREEN */
-@media (min-width:1800px){
-
-    .block-container{
-        padding-left:5rem;
-        padding-right:5rem;
-    }
-
-    .warning-box{
-        font-size:22px;
-    }
 }
 
 </style>
@@ -556,10 +494,10 @@ with right_main:
         warning = {
 
             "date":
-            datetime.now().strftime("%Y-%m-%d"),
+            row["Date"] if "Date" in row else datetime.now().strftime("%Y-%m-%d"),
 
             "time":
-            datetime.now().strftime("%H:%M:%S"),
+            row["Time"] if "Time" in row else datetime.now().strftime("%H:%M:%S"),
 
             "feeder":
             faulty_f,
@@ -585,63 +523,67 @@ with right_main:
         for warn in st.session_state.warning_history[:10]:
 
             st.markdown(
-                f"""
-                <div class="warning-box"
-                style="
-                    background:#ff0000;
-                    color:white;
-                    border-radius:18px;
-                    padding:20px;
-                    margin-bottom:15px;
-                ">
 
-                    <div style="
-                        text-align:center;
-                        font-size:24px;
-                        font-weight:bold;
-                        margin-bottom:20px;
-                    ">
-                        ⚠ WARNING DETECTED ⚠
-                    </div>
+f"""
 
-                    <div style="
-                        display:flex;
-                        justify-content:space-between;
-                        font-size:15px;
-                        margin-bottom:15px;
-                    ">
+<div style="
+background:#ff0000;
+color:white;
+border-radius:18px;
+padding:20px;
+margin-bottom:15px;
+box-shadow:0px 0px 10px rgba(255,0,0,0.4);
+">
 
-                        <div>
-                            📅 {warn['date']}
-                        </div>
+<div style="
+text-align:center;
+font-size:24px;
+font-weight:bold;
+margin-bottom:20px;
+">
+⚠ WARNING DETECTED ⚠
+</div>
 
-                        <div>
-                            🕒 {warn['time']}
-                        </div>
+<div style="
+display:flex;
+justify-content:space-between;
+font-size:15px;
+margin-bottom:15px;
+">
 
-                    </div>
+<div>
+📅 {warn['date']}
+</div>
 
-                    <div style="
-                        text-align:center;
-                        font-size:22px;
-                        font-weight:bold;
-                        margin-bottom:10px;
-                    ">
-                        📡 {warn['feeder']}
-                    </div>
+<div>
+🕒 {warn['time']}
+</div>
 
-                    <div style="
-                        text-align:center;
-                        font-size:26px;
-                        font-weight:900;
-                    ">
-                        🚨 {warn['fault']}
-                    </div>
+</div>
 
-                </div>
-                """,
-                unsafe_allow_html=True
-            )
+<div style="
+text-align:center;
+font-size:22px;
+font-weight:bold;
+margin-bottom:10px;
+">
+📡 {warn['feeder']}
+</div>
+
+<div style="
+text-align:center;
+font-size:26px;
+font-weight:900;
+">
+🚨 {warn['fault']}
+</div>
+
+</div>
+
+""",
+
+unsafe_allow_html=True
+)
 
     else:
 
