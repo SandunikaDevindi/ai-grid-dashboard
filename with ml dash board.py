@@ -586,20 +586,57 @@ with right_main:
 
             st.markdown(
                 f"""
-                <div class="warning-box">
+                <div class="warning-box"
+                style="
+                    background:#ff0000;
+                    color:white;
+                    border-radius:18px;
+                    padding:20px;
+                    margin-bottom:15px;
+                ">
 
-                ⚠ WARNING DETECTED
+                    <div style="
+                        text-align:center;
+                        font-size:24px;
+                        font-weight:bold;
+                        margin-bottom:20px;
+                    ">
+                        ⚠ WARNING DETECTED ⚠
+                    </div>
 
-                <br>
+                    <div style="
+                        display:flex;
+                        justify-content:space-between;
+                        font-size:15px;
+                        margin-bottom:15px;
+                    ">
 
-                📅 {warn['date']}
-                <br>
-                🕒 {warn['time']}
-                <br>
+                        <div>
+                            📅 {warn['date']}
+                        </div>
 
-                📡 {warn['feeder']}
-                <br>
-                🚨 {warn['fault']}
+                        <div>
+                            🕒 {warn['time']}
+                        </div>
+
+                    </div>
+
+                    <div style="
+                        text-align:center;
+                        font-size:22px;
+                        font-weight:bold;
+                        margin-bottom:10px;
+                    ">
+                        📡 {warn['feeder']}
+                    </div>
+
+                    <div style="
+                        text-align:center;
+                        font-size:26px;
+                        font-weight:900;
+                    ">
+                        🚨 {warn['fault']}
+                    </div>
 
                 </div>
                 """,
