@@ -13,7 +13,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# ---------------- CSS ----------------
+# ---------------- RESPONSIVE CSS ----------------
 
 st.markdown("""
 <style>
@@ -23,15 +23,18 @@ st.markdown("""
     color:white;
 }
 
+/* MAIN CONTAINER */
 .block-container{
     padding-top:1rem;
     padding-bottom:1rem;
     padding-left:2rem;
     padding-right:2rem;
+    max-width:100%;
 }
 
+/* TITLES */
 h1{
-    font-size: clamp(28px, 4vw, 52px) !important;
+    font-size: clamp(28px,4vw,52px) !important;
     color:white !important;
 }
 
@@ -39,6 +42,7 @@ h2,h3{
     color:white !important;
 }
 
+/* METRIC BOX */
 [data-testid="metric-container"]{
     background:#111827;
     border-radius:16px;
@@ -46,16 +50,46 @@ h2,h3{
     border:1px solid #1f2937;
 }
 
+/* METRIC VALUE */
 [data-testid="stMetricValue"]{
-    font-size: clamp(22px, 2vw, 40px);
+    font-size: clamp(18px,2vw,40px);
 }
 
+/* SCENARIO BOX */
 .scenario-box{
-    padding:14px;
+    padding:12px;
     border-radius:12px;
     text-align:center;
     font-weight:bold;
     color:white;
+    font-size:14px;
+}
+
+/* MOBILE */
+@media (max-width:768px){
+
+    .block-container{
+        padding-left:0.6rem !important;
+        padding-right:0.6rem !important;
+        padding-top:0.5rem !important;
+    }
+
+    h1{
+        font-size:26px !important;
+    }
+
+    h2,h3{
+        font-size:18px !important;
+    }
+
+    [data-testid="metric-container"]{
+        padding:10px !important;
+    }
+
+    .scenario-box{
+        font-size:11px !important;
+        padding:8px !important;
+    }
 }
 
 </style>
@@ -316,9 +350,10 @@ if not exists:
 
     save_history()
 
-# ---------------- LAYOUT ----------------
+# ---------------- RESPONSIVE LAYOUT ----------------
 
-left_main, right_main = st.columns([2.8, 1.2])
+left_main = st.container()
+right_main = st.container()
 
 # ================= LEFT =================
 
@@ -483,9 +518,11 @@ with left_main:
             height=500
         )
 
-# ================= RIGHT =================
+# ================= WARNING PANEL =================
 
 with right_main:
+
+    st.write("---")
 
     st.subheader("🚨 Warning Panel")
 
@@ -522,12 +559,10 @@ with right_main:
 
         for warn in st.session_state.warning_history[:10]:
 
-            st.markdown(
-
-f"""
+            st.markdown(f"""
 
 <div style="
-background:FF0000;
+background:#FF0000;
 color:white;
 border-radius:18px;
 padding:20px;
@@ -580,10 +615,7 @@ font-weight:900;
 
 </div>
 
-""",
-
-unsafe_allow_html=True
-)
+""", unsafe_allow_html=True)
 
     else:
 
