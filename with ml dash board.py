@@ -5,173 +5,126 @@ import os
 import joblib
 from datetime import datetime
 
-# =========================================================
-# PAGE CONFIG
-# =========================================================
+# ---------------- PAGE CONFIG ----------------
 
 st.set_page_config(
     page_title="AI-Powered Live Grid Monitor",
-    page_icon="⚡",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
 
-# =========================================================
-# RESPONSIVE CSS
-# =========================================================
+# ---------------- RESPONSIVE CSS ----------------
 
 st.markdown("""
 <style>
 
-/* -------- Main Background -------- */
-
-.stApp {
-    background-color: #050816;
-    color: white;
+/* BACKGROUND */
+.stApp{
+    background-color:#0b1220;
+    color:white;
 }
 
-/* -------- Hide Streamlit Menu -------- */
-
-#MainMenu {
-    visibility: hidden;
+/* MAIN PADDING */
+.block-container{
+    padding-top:1rem;
+    padding-bottom:1rem;
+    padding-left:2rem;
+    padding-right:2rem;
 }
 
-footer {
-    visibility: hidden;
+/* TITLE */
+h1{
+    font-size: clamp(28px, 4vw, 52px) !important;
+    color:white !important;
 }
 
-header {
-    visibility: hidden;
+/* SUBHEADERS */
+h2,h3{
+    font-size: clamp(18px, 2vw, 32px) !important;
+    color:white !important;
 }
 
-/* -------- Main Title -------- */
-
-.main-title {
-    font-size: 3vw;
-    font-weight: 800;
-    color: white;
+/* METRIC BOX */
+[data-testid="metric-container"]{
+    background:#111827;
+    border-radius:16px;
+    padding:18px;
+    border:1px solid #1f2937;
 }
 
-.ai-text {
-    font-size: 1.5vw;
-    font-weight: 600;
-    color: #00ffcc;
+/* METRIC LABEL */
+[data-testid="stMetricLabel"]{
+    font-size: clamp(12px, 1vw, 18px);
 }
 
-/* -------- Cards -------- */
-
-.metric-card {
-    background: #111827;
-    padding: 20px;
-    border-radius: 14px;
-    text-align: center;
-    border: 1px solid #1f2937;
-    margin-bottom: 10px;
+/* METRIC VALUE */
+[data-testid="stMetricValue"]{
+    font-size: clamp(22px, 2vw, 40px);
 }
 
-.metric-title {
-    font-size: 1rem;
-    color: #9ca3af;
+/* ALERT BOX */
+.stAlert{
+    border-radius:14px;
 }
 
-.metric-value {
-    font-size: 2rem;
-    font-weight: bold;
-    color: white;
+/* WARNING PANEL */
+.warning-box{
+    background:#ff0000;
+    color:white;
+    padding:20px;
+    border-radius:16px;
+    margin-bottom:15px;
+    font-weight:bold;
+    line-height:1.8;
+    font-size: clamp(14px, 1vw, 20px);
+    box-shadow:0px 0px 10px rgba(255,0,0,0.4);
 }
 
-/* -------- Feeders -------- */
-
-.normal-box {
-    background-color: #064e3b;
-    padding: 14px;
-    border-radius: 12px;
-    text-align: center;
-    font-weight: bold;
-    color: #4ade80;
-    border: 1px solid #166534;
+/* SCENARIO BOX */
+.scenario-box{
+    padding:14px;
+    border-radius:12px;
+    text-align:center;
+    font-weight:bold;
+    color:white;
+    font-size: clamp(12px, 1vw, 18px);
 }
 
-.fault-box {
-    background-color: #7f1d1d;
-    padding: 14px;
-    border-radius: 12px;
-    text-align: center;
-    font-weight: bold;
-    color: #fca5a5;
-    border: 1px solid #dc2626;
-}
+/* MOBILE */
+@media (max-width:768px){
 
-/* -------- Scenario -------- */
-
-.scenario-box {
-    background-color: #1f2937;
-    padding: 12px;
-    border-radius: 10px;
-    text-align: center;
-    font-weight: bold;
-    color: white;
-}
-
-.active-scenario {
-    background-color: #ef4444;
-    color: white;
-}
-
-/* -------- Warning -------- */
-
-.warning-box {
-    background-color: #991b1b;
-    border-radius: 14px;
-    padding: 18px;
-    margin-bottom: 12px;
-    border: 2px solid red;
-    color: white;
-}
-
-.warning-title {
-    font-size: 22px;
-    font-weight: 900;
-    text-align: center;
-}
-
-.warning-text {
-    text-align: center;
-    font-size: 18px;
-    font-weight: bold;
-}
-
-/* -------- Mobile -------- */
-
-@media screen and (max-width: 768px) {
-
-    .main-title {
-        font-size: 7vw;
+    .block-container{
+        padding-left:1rem;
+        padding-right:1rem;
     }
 
-    .ai-text {
-        font-size: 4vw;
+    h1{
+        font-size:28px !important;
     }
 
-    .metric-value {
-        font-size: 1.4rem;
+    .warning-box{
+        font-size:14px;
+        padding:14px;
+    }
+}
+
+/* LARGE SCREEN */
+@media (min-width:1800px){
+
+    .block-container{
+        padding-left:5rem;
+        padding-right:5rem;
     }
 
-    .warning-title {
-        font-size: 18px;
-    }
-
-    .warning-text {
-        font-size: 15px;
+    .warning-box{
+        font-size:22px;
     }
 }
 
 </style>
 """, unsafe_allow_html=True)
 
-# =========================================================
-# FILE PATHS
-# =========================================================
+# ---------------- FILE PATHS ----------------
 
 DATASET_PATH = "AI_Grid_Anomaly_Dataset_for_dash_board.csv"
 
@@ -179,9 +132,11 @@ MODEL_PATH = "xgb_model.pkl"
 
 ENCODER_PATH = "label_encoder.pkl"
 
-# =========================================================
-# CHECK FILES
-# =========================================================
+HISTORY_FILE = "grid_history_log.xlsx"
+
+STATE_FILE = "grid_state.csv"
+
+# ---------------- CHECK FILES ----------------
 
 required_files = [
     DATASET_PATH,
@@ -193,12 +148,10 @@ for file in required_files:
 
     if not os.path.exists(file):
 
-        st.error(f"❌ Missing File: {file}")
+        st.error(f"❌ File Not Found: {file}")
         st.stop()
 
-# =========================================================
-# LOAD DATA
-# =========================================================
+# ---------------- LOAD DATA ----------------
 
 @st.cache_data
 def load_data():
@@ -207,85 +160,246 @@ def load_data():
 
 df = load_data()
 
-# =========================================================
-# LOAD MODEL
-# =========================================================
+# ---------------- LOAD MODEL ----------------
 
 model = joblib.load(MODEL_PATH)
 
 label_encoder = joblib.load(ENCODER_PATH)
 
-# =========================================================
-# SESSION STATES
-# =========================================================
+# ---------------- LOAD HISTORY ----------------
 
-if "row_index" not in st.session_state:
-    st.session_state.row_index = 0
+def load_history():
+
+    if os.path.exists(HISTORY_FILE):
+
+        try:
+
+            return pd.read_excel(
+                HISTORY_FILE
+            ).to_dict("records")
+
+        except:
+
+            return []
+
+    return []
+
+# ---------------- SAVE HISTORY ----------------
+
+def save_history():
+
+    pd.DataFrame(
+        st.session_state.history_log
+    ).to_excel(
+        HISTORY_FILE,
+        index=False
+    )
+
+# ---------------- LOAD STATE ----------------
+
+def load_state():
+
+    if os.path.exists(STATE_FILE):
+
+        try:
+
+            state_df = pd.read_csv(STATE_FILE)
+
+            return {
+
+                "row_index":
+                int(state_df.loc[0, "row_index"]),
+
+                "next_update_time":
+                float(state_df.loc[0, "next_update_time"])
+            }
+
+        except:
+
+            return None
+
+    return None
+
+# ---------------- SAVE STATE ----------------
+
+def save_state():
+
+    pd.DataFrame([{
+
+        "row_index":
+        st.session_state.row_index,
+
+        "next_update_time":
+        st.session_state.next_update_time
+
+    }]).to_csv(
+        STATE_FILE,
+        index=False
+    )
+
+# ---------------- SESSION STATES ----------------
+
+saved_state = load_state()
+
+if "history_log" not in st.session_state:
+
+    st.session_state.history_log = load_history()
 
 if "warning_history" not in st.session_state:
+
     st.session_state.warning_history = []
 
-# =========================================================
-# CURRENT ROW
-# =========================================================
+if "row_index" not in st.session_state:
 
-row = df.iloc[st.session_state.row_index]
+    if saved_state:
 
-# =========================================================
-# ML PREDICTION
-# =========================================================
+        st.session_state.row_index = saved_state["row_index"]
+
+    else:
+
+        st.session_state.row_index = 0
+
+if "next_update_time" not in st.session_state:
+
+    if saved_state:
+
+        st.session_state.next_update_time = (
+            saved_state["next_update_time"]
+        )
+
+    else:
+
+        st.session_state.next_update_time = (
+            time.time() + (15 * 60)
+        )
+
+        save_state()
+
+# ---------------- AUTO UPDATE ----------------
+
+update_interval = 15 * 60
+
+current_time = time.time()
+
+if current_time >= st.session_state.next_update_time:
+
+    st.session_state.row_index = (
+        st.session_state.row_index + 1
+    ) % len(df)
+
+    st.session_state.next_update_time += (
+        update_interval
+    )
+
+    save_state()
+
+# ---------------- CURRENT ROW ----------------
+
+row = df.iloc[
+    st.session_state.row_index
+]
+
+# ---------------- ML PREDICTION ----------------
 
 input_data = pd.DataFrame([{
 
-    "Voltage": row["Voltage"],
-    "Current": row["Current"],
-    "Transformer_kW": row["Transformer_kW"]
+    "Voltage":
+    row["Voltage"],
+
+    "Current":
+    row["Current"],
+
+    "Transformer_kW":
+    row["Transformer_kW"]
 
 }])
 
-prediction_encoded = model.predict(input_data)[0]
+prediction_encoded = model.predict(
+    input_data
+)[0]
 
 prediction = label_encoder.inverse_transform(
     [prediction_encoded]
 )[0]
 
-# =========================================================
-# FEEDER
-# =========================================================
+# ---------------- FEEDER ----------------
 
-faulty_f = "F1"
+faulty_f = ""
 
 if pd.notna(row["Fault_Feeder"]):
 
-    faulty_f = str(row["Fault_Feeder"]).strip()
+    faulty_f = str(
+        row["Fault_Feeder"]
+    ).strip()
 
-# =========================================================
-# MAIN LAYOUT
-# =========================================================
+# ---------------- HISTORY ----------------
 
-left_main, right_main = st.columns([3, 1])
+latest_time = datetime.now().strftime("%H:%M")
 
-# =========================================================
-# LEFT SIDE
-# =========================================================
+exists = False
+
+for item in st.session_state.history_log:
+
+    if item["Logged_Time"] == latest_time:
+
+        exists = True
+        break
+
+if not exists:
+
+    history_entry = {
+
+        "Logged_Date":
+        datetime.now().strftime("%Y-%m-%d"),
+
+        "Logged_Time":
+        latest_time
+    }
+
+    for i in range(1, 5):
+
+        feeder = f"F{i}"
+
+        if (
+            prediction.lower() != "normal"
+            and
+            feeder == faulty_f
+        ):
+
+            history_entry[feeder] = prediction
+
+        else:
+
+            history_entry[feeder] = "Normal"
+
+    st.session_state.history_log.insert(
+        0,
+        history_entry
+    )
+
+    save_history()
+
+# ---------------- LAYOUT ----------------
+
+left_main, right_main = st.columns([2.8, 1.2])
+
+# ================= LEFT =================
 
 with left_main:
 
-    col1, col2 = st.columns([3, 1])
+    c1, c2 = st.columns([3,1])
 
-    with col1:
+    with c1:
 
-        st.markdown(
-            '<div class="main-title">⚡ AI-Powered Live Grid Monitor</div>',
-            unsafe_allow_html=True
+        st.title(
+            "⚡ AI-Powered Live Grid Monitor"
         )
 
-        st.markdown(
-            f'<div class="ai-text">AI Prediction: {prediction}</div>',
-            unsafe_allow_html=True
+        st.subheader(
+            f"AI Prediction: {prediction}"
         )
 
-    with col2:
+    with c2:
 
         st.markdown(
             f"## 🕒 {datetime.now().strftime('%H:%M:%S')}"
@@ -295,88 +409,70 @@ with left_main:
             f"📅 {datetime.now().strftime('%Y-%m-%d')}"
         )
 
-    st.write("")
+    st.divider()
 
-    # =====================================================
     # METRICS
-    # =====================================================
 
     m1, m2, m3, m4 = st.columns(4)
 
-    with m1:
-        st.markdown(f"""
-        <div class="metric-card">
-            <div class="metric-title">Voltage</div>
-            <div class="metric-value">{row['Voltage']:.2f} V</div>
-        </div>
-        """, unsafe_allow_html=True)
+    m1.metric(
+        "Voltage",
+        f"{row['Voltage']:.2f} V"
+    )
 
-    with m2:
-        st.markdown(f"""
-        <div class="metric-card">
-            <div class="metric-title">Current</div>
-            <div class="metric-value">{row['Current']:.2f} A</div>
-        </div>
-        """, unsafe_allow_html=True)
+    m2.metric(
+        "Current",
+        f"{row['Current']:.2f} A"
+    )
 
-    with m3:
-        st.markdown(f"""
-        <div class="metric-card">
-            <div class="metric-title">Power</div>
-            <div class="metric-value">{row['Transformer_kW']:.2f} kW</div>
-        </div>
-        """, unsafe_allow_html=True)
+    m3.metric(
+        "Power",
+        f"{row['Transformer_kW']:.2f} kW"
+    )
 
-    with m4:
-        st.markdown(f"""
-        <div class="metric-card">
-            <div class="metric-title">PF</div>
-            <div class="metric-value">0.88</div>
-        </div>
-        """, unsafe_allow_html=True)
+    m4.metric(
+        "PF",
+        "0.88"
+    )
 
-    # =====================================================
     # FEEDERS
-    # =====================================================
 
-    st.subheader("📡 Feeder Line Status")
+    st.write("---")
 
-    fcols = st.columns(4)
+    st.subheader(
+        "📡 Feeder Line Status"
+    )
+
+    feeder_cols = st.columns(4)
 
     for i in range(1, 5):
 
         feeder = f"F{i}"
 
-        with fcols[i - 1]:
+        with feeder_cols[i - 1]:
 
             if (
                 prediction.lower() != "normal"
-                and feeder == faulty_f
+                and
+                feeder == faulty_f
             ):
 
-                st.markdown(f"""
-                <div class="fault-box">
-                    🚨 Feeder 0{i}<br>
-                    {prediction}
-                </div>
-                """, unsafe_allow_html=True)
+                st.error(
+                    f"🚨 Feeder 0{i}\n{prediction}"
+                )
 
             else:
 
-                st.markdown(f"""
-                <div class="normal-box">
-                    ✅ Feeder 0{i}<br>
-                    Normal
-                </div>
-                """, unsafe_allow_html=True)
+                st.success(
+                    f"✅ Feeder 0{i}\nNormal"
+                )
 
-    st.write("")
-
-    # =====================================================
     # SCENARIOS
-    # =====================================================
+
+    st.write("---")
 
     scenarios = [
+
         "Normal",
         "Theft",
         "Power_Cut",
@@ -385,30 +481,72 @@ with left_main:
         "Lightning"
     ]
 
-    scols = st.columns(6)
+    s_cols = st.columns(6)
 
-    for idx, sc in enumerate(scenarios):
+    for idx, s in enumerate(scenarios):
 
         active = (
-            sc.lower()
-            in prediction.lower()
+            s.lower()
+            in
+            prediction.lower()
         )
 
-        cls = (
-            "scenario-box active-scenario"
+        color = (
+            "#ff4b4b"
             if active
-            else "scenario-box"
+            else "#262730"
         )
 
-        scols[idx].markdown(f"""
-        <div class="{cls}">
-            {sc}
-        </div>
-        """, unsafe_allow_html=True)
+        s_cols[idx].markdown(
+            f"""
+            <div class="scenario-box"
+            style="background:{color};">
+            {s}
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
 
-# =========================================================
-# RIGHT SIDE
-# =========================================================
+    # COUNTDOWN
+
+    time_left = int(
+        st.session_state.next_update_time
+        - current_time
+    )
+
+    if time_left < 0:
+
+        time_left = 0
+
+    minutes = time_left // 60
+    seconds = time_left % 60
+
+    st.caption(
+        f"🔄 Next Update in: "
+        f"{minutes:02d}m {seconds:02d}s"
+    )
+
+    # HISTORY
+
+    st.write("---")
+
+    st.subheader(
+        "📜 Event History Log"
+    )
+
+    if st.session_state.history_log:
+
+        h_df = pd.DataFrame(
+            st.session_state.history_log
+        )
+
+        st.dataframe(
+            h_df,
+            use_container_width=True,
+            height=500
+        )
+
+# ================= RIGHT =================
 
 with right_main:
 
@@ -416,7 +554,7 @@ with right_main:
 
     if prediction.lower() != "normal":
 
-        warning_data = {
+        warning = {
 
             "date":
             datetime.now().strftime("%Y-%m-%d"),
@@ -424,70 +562,88 @@ with right_main:
             "time":
             datetime.now().strftime("%H:%M:%S"),
 
-            "fault":
-            prediction,
-
             "feeder":
-            faulty_f
+            faulty_f,
+
+            "fault":
+            prediction
         }
 
         if (
             len(st.session_state.warning_history) == 0
             or
-            st.session_state.warning_history[0] != warning_data
+            st.session_state.warning_history[0]
+            != warning
         ):
 
             st.session_state.warning_history.insert(
                 0,
-                warning_data
+                warning
             )
 
     if len(st.session_state.warning_history) > 0:
 
         for warn in st.session_state.warning_history[:10]:
 
-            st.markdown(f"""
-            <div class="warning-box">
+            st.markdown(
+                f"""
+                <div class="warning-box">
 
-                <div class="warning-title">
-                    ⚠ WARNING DETECTED ⚠
-                </div>
-
-                <br>
-
-                <div class="warning-text">
-                    📅 {warn['date']}
-                </div>
-
-                <div class="warning-text">
-                    🕒 {warn['time']}
-                </div>
+                ⚠ WARNING DETECTED
 
                 <br>
 
-                <div class="warning-text">
-                    📡 {warn['feeder']}
-                </div>
+                📅 {warn['date']}
 
-                <div class="warning-text">
-                    🚨 {warn['fault']}
-                </div>
+                <br>
 
-            </div>
-            """, unsafe_allow_html=True)
+                🕒 {warn['time']}
+
+                <br><br>
+
+                📡 {warn['feeder']}
+
+                <br>
+
+                🚨 {warn['fault']}
+
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
 
     else:
 
-        st.success("✅ No Active Warnings")
+        st.success(
+            "✅ No Active Warnings"
+        )
 
-# =========================================================
-# AUTO REFRESH
-# =========================================================
+# ---------------- DOWNLOAD ----------------
 
-time.sleep(3)
+st.write("---")
 
-st.session_state.row_index = (
-    st.session_state.row_index + 1
-) % len(df)
+history_df = pd.DataFrame(
+    st.session_state.history_log
+)
+
+excel_file = "grid_history_export.xlsx"
+
+history_df.to_excel(
+    excel_file,
+    index=False
+)
+
+with open(excel_file, "rb") as file:
+
+    st.download_button(
+        label="📥 Download History Excel",
+        data=file,
+        file_name="grid_history_export.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+
+# ---------------- AUTO REFRESH ----------------
+
+time.sleep(1)
 
 st.rerun()
