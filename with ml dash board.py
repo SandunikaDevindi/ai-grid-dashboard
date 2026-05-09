@@ -5,26 +5,183 @@ import os
 import joblib
 from datetime import datetime
 
-# ---------------- PAGE CONFIG ----------------
+# =========================================================
+# PAGE CONFIG
+# =========================================================
 
 st.set_page_config(
     page_title="AI-Powered Live Grid Monitor",
-    layout="wide"
+    page_icon="⚡",
+    layout="wide",
+    initial_sidebar_state="collapsed"
 )
 
-# ---------------- FILE PATHS ----------------
+# =========================================================
+# RESPONSIVE CSS
+# =========================================================
 
-DATASET_PATH = "./AI_Grid_Anomaly_Dataset_for_dash_board.csv"
+st.markdown("""
+<style>
 
-MODEL_PATH = "./xgb_model.pkl"
+/* -------- Main Background -------- */
 
-ENCODER_PATH = "./label_encoder.pkl"
+.stApp {
+    background-color: #050816;
+    color: white;
+}
 
-HISTORY_FILE = "./grid_history_log.xlsx"
+/* -------- Hide Streamlit Menu -------- */
 
-STATE_FILE = "./grid_state.csv"
+#MainMenu {
+    visibility: hidden;
+}
 
-# ---------------- CHECK FILES ----------------
+footer {
+    visibility: hidden;
+}
+
+header {
+    visibility: hidden;
+}
+
+/* -------- Main Title -------- */
+
+.main-title {
+    font-size: 3vw;
+    font-weight: 800;
+    color: white;
+}
+
+.ai-text {
+    font-size: 1.5vw;
+    font-weight: 600;
+    color: #00ffcc;
+}
+
+/* -------- Cards -------- */
+
+.metric-card {
+    background: #111827;
+    padding: 20px;
+    border-radius: 14px;
+    text-align: center;
+    border: 1px solid #1f2937;
+    margin-bottom: 10px;
+}
+
+.metric-title {
+    font-size: 1rem;
+    color: #9ca3af;
+}
+
+.metric-value {
+    font-size: 2rem;
+    font-weight: bold;
+    color: white;
+}
+
+/* -------- Feeders -------- */
+
+.normal-box {
+    background-color: #064e3b;
+    padding: 14px;
+    border-radius: 12px;
+    text-align: center;
+    font-weight: bold;
+    color: #4ade80;
+    border: 1px solid #166534;
+}
+
+.fault-box {
+    background-color: #7f1d1d;
+    padding: 14px;
+    border-radius: 12px;
+    text-align: center;
+    font-weight: bold;
+    color: #fca5a5;
+    border: 1px solid #dc2626;
+}
+
+/* -------- Scenario -------- */
+
+.scenario-box {
+    background-color: #1f2937;
+    padding: 12px;
+    border-radius: 10px;
+    text-align: center;
+    font-weight: bold;
+    color: white;
+}
+
+.active-scenario {
+    background-color: #ef4444;
+    color: white;
+}
+
+/* -------- Warning -------- */
+
+.warning-box {
+    background-color: #991b1b;
+    border-radius: 14px;
+    padding: 18px;
+    margin-bottom: 12px;
+    border: 2px solid red;
+    color: white;
+}
+
+.warning-title {
+    font-size: 22px;
+    font-weight: 900;
+    text-align: center;
+}
+
+.warning-text {
+    text-align: center;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+/* -------- Mobile -------- */
+
+@media screen and (max-width: 768px) {
+
+    .main-title {
+        font-size: 7vw;
+    }
+
+    .ai-text {
+        font-size: 4vw;
+    }
+
+    .metric-value {
+        font-size: 1.4rem;
+    }
+
+    .warning-title {
+        font-size: 18px;
+    }
+
+    .warning-text {
+        font-size: 15px;
+    }
+}
+
+</style>
+""", unsafe_allow_html=True)
+
+# =========================================================
+# FILE PATHS
+# =========================================================
+
+DATASET_PATH = "AI_Grid_Anomaly_Dataset_for_dash_board.csv"
+
+MODEL_PATH = "xgb_model.pkl"
+
+ENCODER_PATH = "label_encoder.pkl"
+
+# =========================================================
+# CHECK FILES
+# =========================================================
 
 required_files = [
     DATASET_PATH,
@@ -36,11 +193,12 @@ for file in required_files:
 
     if not os.path.exists(file):
 
-        st.error(f"❌ File Not Found: {file}")
-
+        st.error(f"❌ Missing File: {file}")
         st.stop()
 
-# ---------------- LOAD DATA ----------------
+# =========================================================
+# LOAD DATA
+# =========================================================
 
 @st.cache_data
 def load_data():
@@ -49,348 +207,176 @@ def load_data():
 
 df = load_data()
 
-# ---------------- LOAD MODEL ----------------
+# =========================================================
+# LOAD MODEL
+# =========================================================
 
 model = joblib.load(MODEL_PATH)
 
 label_encoder = joblib.load(ENCODER_PATH)
 
-# ---------------- LOAD HISTORY ----------------
-
-def load_history():
-
-    if os.path.exists(HISTORY_FILE):
-
-        try:
-
-            return pd.read_excel(
-                HISTORY_FILE
-            ).to_dict("records")
-
-        except:
-
-            return []
-
-    return []
-
-# ---------------- SAVE HISTORY ----------------
-
-def save_history():
-
-    history_df = pd.DataFrame(
-        st.session_state.history_log
-    )
-
-    history_df.to_excel(
-        HISTORY_FILE,
-        index=False
-    )
-
-# ---------------- LOAD STATE ----------------
-
-def load_state():
-
-    if os.path.exists(STATE_FILE):
-
-        try:
-
-            state_df = pd.read_csv(STATE_FILE)
-
-            return {
-
-                "row_index":
-                int(state_df.loc[0, "row_index"]),
-
-                "next_update_time":
-                float(
-                    state_df.loc[
-                        0,
-                        "next_update_time"
-                    ]
-                )
-            }
-
-        except:
-
-            return None
-
-    return None
-
-# ---------------- SAVE STATE ----------------
-
-def save_state():
-
-    state_df = pd.DataFrame([{
-
-        "row_index":
-        st.session_state.row_index,
-
-        "next_update_time":
-        st.session_state.next_update_time
-
-    }])
-
-    state_df.to_csv(
-        STATE_FILE,
-        index=False
-    )
-
-# ---------------- LOAD SAVED STATE ----------------
-
-saved_state = load_state()
-
-# ---------------- SESSION STATES ----------------
-
-if "history_log" not in st.session_state:
-
-    st.session_state.history_log = (
-        load_history()
-    )
-
-if "warning_history" not in st.session_state:
-
-    st.session_state.warning_history = []
-
-# ---------------- ROW INDEX ----------------
+# =========================================================
+# SESSION STATES
+# =========================================================
 
 if "row_index" not in st.session_state:
+    st.session_state.row_index = 0
 
-    if saved_state:
+if "warning_history" not in st.session_state:
+    st.session_state.warning_history = []
 
-        st.session_state.row_index = (
-            saved_state["row_index"]
-        )
+# =========================================================
+# CURRENT ROW
+# =========================================================
 
-    else:
+row = df.iloc[st.session_state.row_index]
 
-        st.session_state.row_index = 0
-
-# ---------------- NEXT UPDATE ----------------
-
-if "next_update_time" not in st.session_state:
-
-    if (
-        saved_state
-        and
-        "next_update_time" in saved_state
-    ):
-
-        st.session_state.next_update_time = (
-            saved_state["next_update_time"]
-        )
-
-    else:
-
-        st.session_state.next_update_time = (
-            time.time() + (15 * 60)
-        )
-
-        save_state()
-
-# ---------------- UPDATE SETTINGS ----------------
-
-update_interval = 15 * 60
-
-current_time = time.time()
-
-# ---------------- AUTO UPDATE ----------------
-
-if current_time >= st.session_state.next_update_time:
-
-    st.session_state.row_index = (
-        st.session_state.row_index + 1
-    ) % len(df)
-
-    st.session_state.next_update_time += (
-        update_interval
-    )
-
-    save_state()
-
-# ---------------- CURRENT ROW ----------------
-
-row = df.iloc[
-    st.session_state.row_index
-]
-
-# ---------------- AI PREDICTION ----------------
+# =========================================================
+# ML PREDICTION
+# =========================================================
 
 input_data = pd.DataFrame([{
 
-    "Voltage":
-    row["Voltage"],
-
-    "Current":
-    row["Current"],
-
-    "Transformer_kW":
-    row["Transformer_kW"]
+    "Voltage": row["Voltage"],
+    "Current": row["Current"],
+    "Transformer_kW": row["Transformer_kW"]
 
 }])
 
-prediction_encoded = model.predict(
-    input_data
-)[0]
+prediction_encoded = model.predict(input_data)[0]
 
 prediction = label_encoder.inverse_transform(
     [prediction_encoded]
 )[0]
 
-# ---------------- FEEDER ----------------
+# =========================================================
+# FEEDER
+# =========================================================
 
-faulty_f = ""
+faulty_f = "F1"
 
 if pd.notna(row["Fault_Feeder"]):
 
-    faulty_f = str(
-        row["Fault_Feeder"]
-    ).strip()
+    faulty_f = str(row["Fault_Feeder"]).strip()
 
-# ---------------- UPDATE HISTORY ----------------
+# =========================================================
+# MAIN LAYOUT
+# =========================================================
 
-latest_time = datetime.now().strftime("%H:%M")
+left_main, right_main = st.columns([3, 1])
 
-history_exists = False
-
-for item in st.session_state.history_log:
-
-    if item["Logged_Time"] == latest_time:
-
-        history_exists = True
-
-        break
-
-if not history_exists:
-
-    history_entry = {}
-
-    history_entry["Logged_Date"] = (
-        datetime.now().strftime("%Y-%m-%d")
-    )
-
-    history_entry["Logged_Time"] = (
-        latest_time
-    )
-
-    for i in range(1, 5):
-
-        f_id = f"F{i}"
-
-        if (
-            prediction.lower() != "normal"
-            and
-            f_id == faulty_f
-        ):
-
-            history_entry[f"F{i}"] = prediction
-
-        else:
-
-            history_entry[f"F{i}"] = "Normal"
-
-    st.session_state.history_log.insert(
-        0,
-        history_entry
-    )
-
-    save_history()
-
-# ---------------- MAIN LAYOUT ----------------
-
-left_main, right_main = st.columns([2.8, 1.2])
-
-# ================= LEFT SIDE =================
+# =========================================================
+# LEFT SIDE
+# =========================================================
 
 with left_main:
 
-    c1, c2 = st.columns([3, 1])
+    col1, col2 = st.columns([3, 1])
 
-    with c1:
-
-        st.title(
-            "⚡ AI-Powered Live Grid Monitor"
-        )
-
-        st.subheader(
-            f"AI Prediction: {prediction}"
-        )
-
-    with c2:
+    with col1:
 
         st.markdown(
-            f"## 🕒 "
-            f"{datetime.now().strftime('%H:%M:%S')}"
+            '<div class="main-title">⚡ AI-Powered Live Grid Monitor</div>',
+            unsafe_allow_html=True
+        )
+
+        st.markdown(
+            f'<div class="ai-text">AI Prediction: {prediction}</div>',
+            unsafe_allow_html=True
+        )
+
+    with col2:
+
+        st.markdown(
+            f"## 🕒 {datetime.now().strftime('%H:%M:%S')}"
         )
 
         st.caption(
-            f"📅 "
-            f"{datetime.now().strftime('%Y-%m-%d')}"
+            f"📅 {datetime.now().strftime('%Y-%m-%d')}"
         )
 
-    st.divider()
+    st.write("")
 
-    # ---------------- METRICS ----------------
+    # =====================================================
+    # METRICS
+    # =====================================================
 
     m1, m2, m3, m4 = st.columns(4)
 
-    m1.metric(
-        "Voltage",
-        f"{row['Voltage']:.2f} V"
-    )
+    with m1:
+        st.markdown(f"""
+        <div class="metric-card">
+            <div class="metric-title">Voltage</div>
+            <div class="metric-value">{row['Voltage']:.2f} V</div>
+        </div>
+        """, unsafe_allow_html=True)
 
-    m2.metric(
-        "Current",
-        f"{row['Current']:.2f} A"
-    )
+    with m2:
+        st.markdown(f"""
+        <div class="metric-card">
+            <div class="metric-title">Current</div>
+            <div class="metric-value">{row['Current']:.2f} A</div>
+        </div>
+        """, unsafe_allow_html=True)
 
-    m3.metric(
-        "Power",
-        f"{row['Transformer_kW']:.2f} kW"
-    )
+    with m3:
+        st.markdown(f"""
+        <div class="metric-card">
+            <div class="metric-title">Power</div>
+            <div class="metric-value">{row['Transformer_kW']:.2f} kW</div>
+        </div>
+        """, unsafe_allow_html=True)
 
-    m4.metric(
-        "PF",
-        "0.88"
-    )
+    with m4:
+        st.markdown(f"""
+        <div class="metric-card">
+            <div class="metric-title">PF</div>
+            <div class="metric-value">0.88</div>
+        </div>
+        """, unsafe_allow_html=True)
 
-    # ---------------- FEEDERS ----------------
+    # =====================================================
+    # FEEDERS
+    # =====================================================
 
-    st.write("---")
+    st.subheader("📡 Feeder Line Status")
 
-    st.subheader(
-        "📡 Feeder Line Status"
-    )
-
-    f_cols = st.columns(4)
+    fcols = st.columns(4)
 
     for i in range(1, 5):
 
-        f_id = f"F{i}"
+        feeder = f"F{i}"
 
-        with f_cols[i - 1]:
+        with fcols[i - 1]:
 
             if (
                 prediction.lower() != "normal"
-                and
-                f_id == faulty_f
+                and feeder == faulty_f
             ):
 
-                st.error(
-                    f"🚨 Feeder 0{i}\n{prediction}"
-                )
+                st.markdown(f"""
+                <div class="fault-box">
+                    🚨 Feeder 0{i}<br>
+                    {prediction}
+                </div>
+                """, unsafe_allow_html=True)
 
             else:
 
-                st.success(
-                    f"✅ Feeder 0{i}\nNormal"
-                )
+                st.markdown(f"""
+                <div class="normal-box">
+                    ✅ Feeder 0{i}<br>
+                    Normal
+                </div>
+                """, unsafe_allow_html=True)
 
-    # ---------------- SCENARIOS ----------------
+    st.write("")
 
-    st.write("---")
+    # =====================================================
+    # SCENARIOS
+    # =====================================================
 
     scenarios = [
-
         "Normal",
         "Theft",
         "Power_Cut",
@@ -399,120 +385,56 @@ with left_main:
         "Lightning"
     ]
 
-    s_cols = st.columns(6)
+    scols = st.columns(6)
 
-    for idx, s in enumerate(scenarios):
+    for idx, sc in enumerate(scenarios):
 
         active = (
-            s.lower()
-            in
-            str(prediction).lower()
+            sc.lower()
+            in prediction.lower()
         )
 
-        color = (
-            "#ff4b4b"
+        cls = (
+            "scenario-box active-scenario"
             if active
-            else "#262730"
+            else "scenario-box"
         )
 
-        s_cols[idx].markdown(
-            f"""
-            <div style="
-                background-color:{color};
-                color:white;
-                padding:12px;
-                border-radius:8px;
-                text-align:center;
-                font-weight:bold;
-                font-size:16px;
-            ">
-                {s}
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
+        scols[idx].markdown(f"""
+        <div class="{cls}">
+            {sc}
+        </div>
+        """, unsafe_allow_html=True)
 
-    # ---------------- COUNTDOWN ----------------
-
-    time_left = int(
-        st.session_state.next_update_time
-        - current_time
-    )
-
-    if time_left < 0:
-
-        time_left = 0
-
-    minutes = time_left // 60
-
-    seconds = time_left % 60
-
-    st.caption(
-        f"🔄 Next Update in: "
-        f"{minutes:02d}m {seconds:02d}s"
-    )
-
-    # ---------------- HISTORY ----------------
-
-    st.write("---")
-
-    st.subheader(
-        "📜 Event History Log"
-    )
-
-    if st.session_state.history_log:
-
-        h_df = pd.DataFrame(
-            st.session_state.history_log
-        )
-
-        st.dataframe(
-            h_df[
-                [
-                    "Logged_Date",
-                    "Logged_Time",
-                    "F1",
-                    "F2",
-                    "F3",
-                    "F4"
-                ]
-            ],
-            use_container_width=True,
-            height=500
-        )
-
-# ================= RIGHT SIDE =================
+# =========================================================
+# RIGHT SIDE
+# =========================================================
 
 with right_main:
 
     st.subheader("🚨 Warning Panel")
 
-    if (
-        pd.notna(prediction)
-        and
-        str(prediction).lower() != "normal"
-    ):
+    if prediction.lower() != "normal":
 
         warning_data = {
-
-            "time":
-            datetime.now().strftime("%H:%M:%S"),
 
             "date":
             datetime.now().strftime("%Y-%m-%d"),
 
-            "feeder":
-            faulty_f,
+            "time":
+            datetime.now().strftime("%H:%M:%S"),
 
             "fault":
-            prediction
+            prediction,
+
+            "feeder":
+            faulty_f
         }
 
         if (
             len(st.session_state.warning_history) == 0
             or
-            st.session_state.warning_history[0]
-            != warning_data
+            st.session_state.warning_history[0] != warning_data
         ):
 
             st.session_state.warning_history.insert(
@@ -524,48 +446,48 @@ with right_main:
 
         for warn in st.session_state.warning_history[:10]:
 
-            st.error(
-                f"""
-⚠ WARNING DETECTED
+            st.markdown(f"""
+            <div class="warning-box">
 
-📅 {warn['date']}
-🕒 {warn['time']}
+                <div class="warning-title">
+                    ⚠ WARNING DETECTED ⚠
+                </div>
 
-📡 {warn['feeder']}
-🚨 {warn['fault']}
-                """
-            )
+                <br>
+
+                <div class="warning-text">
+                    📅 {warn['date']}
+                </div>
+
+                <div class="warning-text">
+                    🕒 {warn['time']}
+                </div>
+
+                <br>
+
+                <div class="warning-text">
+                    📡 {warn['feeder']}
+                </div>
+
+                <div class="warning-text">
+                    🚨 {warn['fault']}
+                </div>
+
+            </div>
+            """, unsafe_allow_html=True)
 
     else:
 
         st.success("✅ No Active Warnings")
 
-# ---------------- DOWNLOAD ----------------
+# =========================================================
+# AUTO REFRESH
+# =========================================================
 
-st.write("---")
+time.sleep(3)
 
-history_df = pd.DataFrame(
-    st.session_state.history_log
-)
-
-excel_file = "grid_history_export.xlsx"
-
-history_df.to_excel(
-    excel_file,
-    index=False
-)
-
-with open(excel_file, "rb") as file:
-
-    st.download_button(
-        label="📥 Download History Excel",
-        data=file,
-        file_name="grid_history_export.xlsx",
-        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    )
-
-# ---------------- AUTO REFRESH ----------------
-
-time.sleep(1)
+st.session_state.row_index = (
+    st.session_state.row_index + 1
+) % len(df)
 
 st.rerun()
