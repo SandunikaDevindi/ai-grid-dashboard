@@ -69,7 +69,6 @@ h2,h3{
 
 /* WARNING PANEL */
 .warning-box{
-    background:#ff0000;
     color:white;
     padding:20px;
     border-radius:16px;
@@ -599,7 +598,7 @@ with right_main:
 
                 🕒 {warn['time']}
 
-                <br><br>
+                <br>
 
                 📡 {warn['feeder']}
 
