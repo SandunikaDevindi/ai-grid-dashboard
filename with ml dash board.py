@@ -14,15 +14,31 @@ st.set_page_config(
 
 # ---------------- FILE PATHS ----------------
 
-DATASET_PATH = r"D:\Final research\AI_Grid_Anomaly_Dataset_for_dash_board.csv"
+DATASET_PATH = "./AI_Grid_Anomaly_Dataset_for_dash_board.csv"
 
-MODEL_PATH = r"D:\Final research\xgb_model.pkl"
+MODEL_PATH = "./xgb_model.pkl"
 
-ENCODER_PATH = r"D:\Final research\label_encoder.pkl"
+ENCODER_PATH = "./label_encoder.pkl"
 
-HISTORY_FILE = r"D:\Final research\grid_history_log.xlsx"
+HISTORY_FILE = "./grid_history_log.xlsx"
 
-STATE_FILE = r"D:\Final research\grid_state.csv"
+STATE_FILE = "./grid_state.csv"
+
+# ---------------- CHECK FILES ----------------
+
+required_files = [
+    DATASET_PATH,
+    MODEL_PATH,
+    ENCODER_PATH
+]
+
+for file in required_files:
+
+    if not os.path.exists(file):
+
+        st.error(f"❌ File Not Found: {file}")
+
+        st.stop()
 
 # ---------------- LOAD DATA ----------------
 
@@ -33,7 +49,7 @@ def load_data():
 
 df = load_data()
 
-# ---------------- LOAD ML MODEL ----------------
+# ---------------- LOAD MODEL ----------------
 
 model = joblib.load(MODEL_PATH)
 
@@ -83,12 +99,7 @@ def load_state():
             return {
 
                 "row_index":
-                int(
-                    state_df.loc[
-                        0,
-                        "row_index"
-                    ]
-                ),
+                int(state_df.loc[0, "row_index"]),
 
                 "next_update_time":
                 float(
@@ -176,13 +187,13 @@ if "next_update_time" not in st.session_state:
 
         save_state()
 
-# ---------------- SETTINGS ----------------
+# ---------------- UPDATE SETTINGS ----------------
 
 update_interval = 15 * 60
 
-# ---------------- UPDATE LOGIC ----------------
-
 current_time = time.time()
+
+# ---------------- AUTO UPDATE ----------------
 
 if current_time >= st.session_state.next_update_time:
 
@@ -235,7 +246,7 @@ if pd.notna(row["Fault_Feeder"]):
         row["Fault_Feeder"]
     ).strip()
 
-# ---------------- HISTORY UPDATE ----------------
+# ---------------- UPDATE HISTORY ----------------
 
 latest_time = datetime.now().strftime("%H:%M")
 
@@ -292,8 +303,6 @@ left_main, right_main = st.columns([2.8, 1.2])
 
 with left_main:
 
-    # HEADER
-
     c1, c2 = st.columns([3, 1])
 
     with c1:
@@ -344,12 +353,12 @@ with left_main:
         "0.88"
     )
 
-    # ---------------- FEEDER STATUS ----------------
+    # ---------------- FEEDERS ----------------
 
     st.write("---")
 
     st.subheader(
-        "📡 Feeder Line Status (Current)"
+        "📡 Feeder Line Status"
     )
 
     f_cols = st.columns(4)
@@ -367,8 +376,7 @@ with left_main:
             ):
 
                 st.error(
-                    f"🚨 Feeder 0{i}\n"
-                    f"{prediction}"
+                    f"🚨 Feeder 0{i}\n{prediction}"
                 )
 
             else:
@@ -377,7 +385,7 @@ with left_main:
                     f"✅ Feeder 0{i}\nNormal"
                 )
 
-    # ---------------- SCENARIO PANEL ----------------
+    # ---------------- SCENARIOS ----------------
 
     st.write("---")
 
@@ -479,19 +487,11 @@ with right_main:
 
     st.subheader("🚨 Warning Panel")
 
-    fault_detected = False
-
     if (
         pd.notna(prediction)
         and
         str(prediction).lower() != "normal"
     ):
-
-        fault_detected = True
-
-    # ---------------- ADD WARNING ----------------
-
-    if fault_detected:
 
         warning_data = {
 
@@ -520,73 +520,27 @@ with right_main:
                 warning_data
             )
 
-    # ---------------- SHOW WARNINGS ----------------
-
     if len(st.session_state.warning_history) > 0:
 
         for warn in st.session_state.warning_history[:10]:
 
-            st.markdown(
+            st.error(
                 f"""
-                <div style="
-                    background-color:#ff0000;
-                    color:white;
-                    padding:18px;
-                    border-radius:12px;
-                    margin-bottom:12px;
-                    font-weight:bold;
-                    box-shadow:0px 0px 8px rgba(255,0,0,0.5);
-                ">
+⚠ WARNING DETECTED
 
-                    <div style="
-                        display:flex;
-                        justify-content:space-between;
-                        font-size:13px;
-                        margin-bottom:10px;
-                    ">
+📅 {warn['date']}
+🕒 {warn['time']}
 
-                        <div>
-                            📅 {warn['date']}
-                        </div>
-
-                        <div>
-                            🕒 {warn['time']}
-                        </div>
-
-                    </div>
-
-                    <div style="
-                        font-size:22px;
-                        font-weight:900;
-                        margin-top:8px;
-                        margin-bottom:12px;
-                        text-align:center;
-                    ">
-
-                        ⚠ WARNING DETECTED ⚠
-
-                    </div>
-
-                    <div style="
-                        font-size:24px;
-                        font-weight:bold;
-                        text-align:center;
-                    ">
-
-                        📡 {warn['feeder']} - 🚨 {warn['fault']}
-
-                    </div>
-
-                </div>
-                """,
-                unsafe_allow_html=True
+📡 {warn['feeder']}
+🚨 {warn['fault']}
+                """
             )
 
     else:
 
         st.success("✅ No Active Warnings")
 
-# ---------------- DOWNLOAD EXCEL ----------------
+# ---------------- DOWNLOAD ----------------
 
 st.write("---")
 
