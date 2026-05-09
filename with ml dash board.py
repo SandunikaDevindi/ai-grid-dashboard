@@ -111,10 +111,14 @@ h2,h3{
 
 # ================= FILE PATHS =================
 
-DATASET_PATH = "AI_Grid_Anomaly_Dataset_for_dash_board.csv"
+DATASET_PATH = "future_grid_test_dataset.csv"
+
 MODEL_PATH = "xgb_model.pkl"
+
 ENCODER_PATH = "label_encoder.pkl"
+
 HISTORY_FILE = "grid_history_log.xlsx"
+
 STATE_FILE = "grid_state.csv"
 
 # ================= CHECK FILES =================
@@ -144,7 +148,26 @@ df = load_data()
 # ================= LOAD MODEL =================
 
 model = joblib.load(MODEL_PATH)
+
 label_encoder = joblib.load(ENCODER_PATH)
+
+# ================= PREDICT ALL DATA =================
+
+predict_df = df[
+    [
+        "Voltage",
+        "Current",
+        "Transformer_kW"
+    ]
+]
+
+pred_encoded = model.predict(
+    predict_df
+)
+
+df["Prediction"] = label_encoder.inverse_transform(
+    pred_encoded
+)
 
 # ================= LOAD HISTORY =================
 
@@ -256,6 +279,7 @@ if "next_update_time" not in st.session_state:
 # ================= AUTO UPDATE =================
 
 update_interval = 15 * 60
+
 current_time = time.time()
 
 new_update = False
@@ -272,38 +296,13 @@ if current_time >= st.session_state.next_update_time:
 
     new_update = True
 
-else:
-
-    new_update = False
-
 # ================= CURRENT ROW =================
 
 row = df.iloc[
     st.session_state.row_index
 ]
 
-# ================= ML PREDICTION =================
-
-input_data = pd.DataFrame([{
-
-    "Voltage":
-    row["Voltage"],
-
-    "Current":
-    row["Current"],
-
-    "Transformer_kW":
-    row["Transformer_kW"]
-
-}])
-
-prediction_encoded = model.predict(
-    input_data
-)[0]
-
-prediction = label_encoder.inverse_transform(
-    [prediction_encoded]
-)[0]
+prediction = row["Prediction"]
 
 # ================= FEEDER =================
 
@@ -323,6 +322,7 @@ fixed_time = datetime.fromtimestamp(
 )
 
 logged_date = fixed_time.strftime("%Y-%m-%d")
+
 logged_time = fixed_time.strftime("%H:%M")
 
 exists = False
@@ -372,38 +372,9 @@ if new_update and not exists:
 
     save_history()
 
-# ================= RESPONSIVE LAYOUT =================
+# ================= LAYOUT =================
 
-is_mobile = False
-
-try:
-
-    user_agent = st.context.headers.get(
-        "User-Agent",""
-    )
-
-    mobile_keywords = [
-        "iphone",
-        "android",
-        "mobile"
-    ]
-
-    is_mobile = any(
-        word in user_agent.lower()
-        for word in mobile_keywords
-    )
-
-except:
-    pass
-
-if not is_mobile:
-
-    left_main, right_main = st.columns([2.7,1.3])
-
-else:
-
-    left_main = st.container()
-    right_main = st.container()
+left_main, right_main = st.columns([2.7,1.3])
 
 # ================= LEFT PANEL =================
 
@@ -540,6 +511,7 @@ with left_main:
         time_left = 0
 
     minutes = time_left // 60
+
     seconds = time_left % 60
 
     st.caption(
@@ -578,6 +550,32 @@ with left_main:
             height=400
         )
 
+    # ================= DETECTED ANOMALIES =================
+
+    st.write("---")
+
+    st.subheader(
+        "🚨 Detected Anomalies"
+    )
+
+    anomalies_df = df[
+        df["Prediction"].str.lower() != "normal"
+    ]
+
+    if len(anomalies_df) > 0:
+
+        st.dataframe(
+            anomalies_df,
+            use_container_width=True,
+            height=300
+        )
+
+    else:
+
+        st.success(
+            "✅ No Anomalies Detected"
+        )
+
 # ================= RIGHT PANEL =================
 
 with right_main:
@@ -589,10 +587,10 @@ with right_main:
         warning = {
 
             "date":
-            sl_time.strftime("%Y-%m-%d"),
+            row["Date"],
 
             "time":
-            sl_time.strftime("%H:%M:%S"),
+            row["Time"],
 
             "feeder":
             faulty_f,
