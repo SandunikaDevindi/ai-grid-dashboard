@@ -85,15 +85,6 @@ h2,h3{
     box-shadow:0px 0px 10px rgba(255,0,0,0.4);
 }
 
-/* HISTORY CARD */
-.history-card{
-    background:#111827;
-    padding:15px;
-    border-radius:14px;
-    margin-bottom:12px;
-    border:1px solid #1f2937;
-}
-
 /* MOBILE */
 @media (max-width:768px){
 
@@ -330,15 +321,26 @@ if pd.notna(row["Fault_Feeder"]):
         row["Fault_Feeder"]
     ).strip()
 
-# ================= HISTORY =================
+# ================= FIXED 15 MINUTE HISTORY =================
 
-latest_time = sl_time.strftime("%H:%M")
+fixed_time = datetime.fromtimestamp(
+    st.session_state.next_update_time - update_interval,
+    sri_lanka
+)
+
+logged_date = fixed_time.strftime("%Y-%m-%d")
+
+logged_time = fixed_time.strftime("%H:%M")
 
 exists = False
 
 for item in st.session_state.history_log:
 
-    if item["Logged_Time"] == latest_time:
+    if (
+        item["Logged_Date"] == logged_date
+        and
+        item["Logged_Time"] == logged_time
+    ):
 
         exists = True
         break
@@ -348,10 +350,10 @@ if not exists:
     history_entry = {
 
         "Logged_Date":
-        sl_time.strftime("%Y-%m-%d"),
+        logged_date,
 
         "Logged_Time":
-        latest_time
+        logged_time
     }
 
     for i in range(1,5):
@@ -434,7 +436,7 @@ with left_main:
 
     st.divider()
 
-    # METRICS
+    # ================= METRICS =================
 
     m1, m2, m3, m4 = st.columns(4)
 
@@ -458,7 +460,7 @@ with left_main:
         "0.88"
     )
 
-    # FEEDERS
+    # ================= FEEDER STATUS =================
 
     st.write("---")
 
@@ -488,7 +490,7 @@ with left_main:
                     f"✅ Feeder 0{i}\nNormal"
                 )
 
-    # SCENARIOS
+    # ================= SCENARIOS =================
 
     st.write("---")
 
@@ -524,7 +526,7 @@ with left_main:
             unsafe_allow_html=True
         )
 
-    # COUNTDOWN
+    # ================= COUNTDOWN =================
 
     time_left = int(
         st.session_state.next_update_time
@@ -542,12 +544,12 @@ with left_main:
         f"{minutes:02d}m {seconds:02d}s"
     )
 
-    # ================= FEEDER HISTORY =================
+    # ================= FEEDER STATUS HISTORY =================
 
     st.write("---")
 
     st.subheader(
-        "📜 Feeder Status History (15 Minute Updates)"
+        "📜 Feeder Status History"
     )
 
     if st.session_state.history_log:
@@ -556,85 +558,22 @@ with left_main:
             st.session_state.history_log
         )
 
-        for _, row_data in history_df.head(20).iterrows():
+        st.dataframe(
 
-            st.markdown(f"""
+            history_df[
+                [
+                    "Logged_Date",
+                    "Logged_Time",
+                    "F1",
+                    "F2",
+                    "F3",
+                    "F4"
+                ]
+            ],
 
-<div class="history-card">
-
-<div style="
-display:flex;
-justify-content:space-between;
-margin-bottom:15px;
-font-size:14px;
-font-weight:bold;
-">
-
-<div>
-📅 {row_data['Logged_Date']}
-</div>
-
-<div>
-🕒 {row_data['Logged_Time']}
-</div>
-
-</div>
-
-<div style="
-display:grid;
-grid-template-columns:repeat(4,1fr);
-gap:10px;
-">
-
-<div style="
-background:#1e293b;
-padding:10px;
-border-radius:10px;
-text-align:center;
-">
-📡 F1
-<br>
-{row_data['F1']}
-</div>
-
-<div style="
-background:#1e293b;
-padding:10px;
-border-radius:10px;
-text-align:center;
-">
-📡 F2
-<br>
-{row_data['F2']}
-</div>
-
-<div style="
-background:#1e293b;
-padding:10px;
-border-radius:10px;
-text-align:center;
-">
-📡 F3
-<br>
-{row_data['F3']}
-</div>
-
-<div style="
-background:#1e293b;
-padding:10px;
-border-radius:10px;
-text-align:center;
-">
-📡 F4
-<br>
-{row_data['F4']}
-</div>
-
-</div>
-
-</div>
-
-""", unsafe_allow_html=True)
+            use_container_width=True,
+            height=400
+        )
 
 # ================= RIGHT PANEL =================
 
