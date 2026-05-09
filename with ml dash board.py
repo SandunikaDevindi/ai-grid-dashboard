@@ -3,6 +3,7 @@ import pandas as pd
 import time
 import os
 import joblib
+import pytz
 from datetime import datetime
 
 # ================= PAGE CONFIG =================
@@ -12,6 +13,12 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="collapsed"
 )
+
+# ================= SRI LANKA TIME =================
+
+sri_lanka = pytz.timezone("Asia/Colombo")
+
+sl_time = datetime.now(sri_lanka)
 
 # ================= RESPONSIVE CSS =================
 
@@ -147,6 +154,7 @@ df = load_data()
 # ================= LOAD MODEL =================
 
 model = joblib.load(MODEL_PATH)
+
 label_encoder = joblib.load(ENCODER_PATH)
 
 # ================= LOAD HISTORY =================
@@ -156,9 +164,13 @@ def load_history():
     if os.path.exists(HISTORY_FILE):
 
         try:
-            return pd.read_excel(HISTORY_FILE).to_dict("records")
+
+            return pd.read_excel(
+                HISTORY_FILE
+            ).to_dict("records")
 
         except:
+
             return []
 
     return []
@@ -257,6 +269,7 @@ if "next_update_time" not in st.session_state:
 # ================= AUTO UPDATE =================
 
 update_interval = 15 * 60
+
 current_time = time.time()
 
 if current_time >= st.session_state.next_update_time:
@@ -310,7 +323,7 @@ if pd.notna(row["Fault_Feeder"]):
 
 # ================= HISTORY =================
 
-latest_time = datetime.now().strftime("%H:%M")
+latest_time = sl_time.strftime("%H:%M")
 
 exists = False
 
@@ -326,7 +339,7 @@ if not exists:
     history_entry = {
 
         "Logged_Date":
-        datetime.now().strftime("%Y-%m-%d"),
+        sl_time.strftime("%Y-%m-%d"),
 
         "Logged_Time":
         latest_time
@@ -403,11 +416,11 @@ with left_main:
     with c2:
 
         st.markdown(
-            f"## 🕒 {datetime.now().strftime('%H:%M:%S')}"
+            f"## 🕒 {sl_time.strftime('%H:%M:%S')}"
         )
 
         st.caption(
-            f"📅 {datetime.now().strftime('%Y-%m-%d')}"
+            f"📅 {sl_time.strftime('%Y-%m-%d')}"
         )
 
     st.divider()
@@ -549,10 +562,10 @@ with right_main:
         warning = {
 
             "date":
-            row["Date"] if "Date" in row else datetime.now().strftime("%Y-%m-%d"),
+            sl_time.strftime("%Y-%m-%d"),
 
             "time":
-            row["Time"] if "Time" in row else datetime.now().strftime("%H:%M:%S"),
+            sl_time.strftime("%H:%M:%S"),
 
             "feeder":
             faulty_f,
