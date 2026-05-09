@@ -527,7 +527,7 @@ with right_main:
 f"""
 
 <div style="
-background:A12323;
+background:FF0000;
 color:white;
 border-radius:18px;
 padding:20px;
