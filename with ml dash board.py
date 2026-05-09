@@ -17,21 +17,18 @@ st.set_page_config(
 # ================= SRI LANKA TIME =================
 
 sri_lanka = pytz.timezone("Asia/Colombo")
-
 sl_time = datetime.now(sri_lanka)
 
-# ================= RESPONSIVE CSS =================
+# ================= CSS =================
 
 st.markdown("""
 <style>
 
-/* MAIN APP */
 .stApp{
     background-color:#0b1220;
     color:white;
 }
 
-/* MAIN CONTAINER */
 .block-container{
     padding-top:1rem;
     padding-bottom:1rem;
@@ -40,19 +37,16 @@ st.markdown("""
     max-width:100%;
 }
 
-/* TITLE */
 h1{
     font-size:clamp(26px,4vw,52px)!important;
     color:white!important;
 }
 
-/* SUBHEADINGS */
 h2,h3{
     color:white!important;
     font-size:clamp(18px,2vw,30px)!important;
 }
 
-/* METRIC BOX */
 [data-testid="metric-container"]{
     background:#111827;
     border-radius:16px;
@@ -60,12 +54,10 @@ h2,h3{
     border:1px solid #1f2937;
 }
 
-/* METRIC VALUE */
 [data-testid="stMetricValue"]{
     font-size:clamp(18px,2vw,40px);
 }
 
-/* SCENARIO BOX */
 .scenario-box{
     padding:12px;
     border-radius:12px;
@@ -75,7 +67,6 @@ h2,h3{
     font-size:clamp(10px,1vw,18px);
 }
 
-/* WARNING CARD */
 .warning-card{
     background:#ff0000;
     color:white;
@@ -85,7 +76,6 @@ h2,h3{
     box-shadow:0px 0px 10px rgba(255,0,0,0.4);
 }
 
-/* MOBILE */
 @media (max-width:768px){
 
     .block-container{
@@ -154,7 +144,6 @@ df = load_data()
 # ================= LOAD MODEL =================
 
 model = joblib.load(MODEL_PATH)
-
 label_encoder = joblib.load(ENCODER_PATH)
 
 # ================= LOAD HISTORY =================
@@ -164,13 +153,11 @@ def load_history():
     if os.path.exists(HISTORY_FILE):
 
         try:
-
             return pd.read_excel(
                 HISTORY_FILE
             ).to_dict("records")
 
         except:
-
             return []
 
     return []
@@ -269,8 +256,9 @@ if "next_update_time" not in st.session_state:
 # ================= AUTO UPDATE =================
 
 update_interval = 15 * 60
-
 current_time = time.time()
+
+new_update = False
 
 if current_time >= st.session_state.next_update_time:
 
@@ -281,6 +269,12 @@ if current_time >= st.session_state.next_update_time:
     st.session_state.next_update_time += update_interval
 
     save_state()
+
+    new_update = True
+
+else:
+
+    new_update = False
 
 # ================= CURRENT ROW =================
 
@@ -321,7 +315,7 @@ if pd.notna(row["Fault_Feeder"]):
         row["Fault_Feeder"]
     ).strip()
 
-# ================= FIXED 15 MINUTE HISTORY =================
+# ================= HISTORY =================
 
 fixed_time = datetime.fromtimestamp(
     st.session_state.next_update_time - update_interval,
@@ -329,7 +323,6 @@ fixed_time = datetime.fromtimestamp(
 )
 
 logged_date = fixed_time.strftime("%Y-%m-%d")
-
 logged_time = fixed_time.strftime("%H:%M")
 
 exists = False
@@ -345,7 +338,7 @@ for item in st.session_state.history_log:
         exists = True
         break
 
-if not exists:
+if new_update and not exists:
 
     history_entry = {
 
@@ -385,7 +378,9 @@ is_mobile = False
 
 try:
 
-    user_agent = st.context.headers.get("User-Agent","")
+    user_agent = st.context.headers.get(
+        "User-Agent",""
+    )
 
     mobile_keywords = [
         "iphone",
@@ -418,7 +413,9 @@ with left_main:
 
     with c1:
 
-        st.title("⚡ AI-Powered Live Grid Monitor")
+        st.title(
+            "⚡ AI-Powered Live Grid Monitor"
+        )
 
         st.subheader(
             f"AI Prediction: {prediction}"
@@ -460,11 +457,13 @@ with left_main:
         "0.88"
     )
 
-    # ================= FEEDER STATUS =================
+    # ================= FEEDERS =================
 
     st.write("---")
 
-    st.subheader("📡 Feeder Line Status")
+    st.subheader(
+        "📡 Feeder Line Status"
+    )
 
     feeder_cols = st.columns(4)
 
@@ -508,7 +507,11 @@ with left_main:
 
     for idx, s in enumerate(scenarios):
 
-        active = s.lower() in prediction.lower()
+        active = (
+            s.lower()
+            in
+            prediction.lower()
+        )
 
         color = (
             "#ff4b4b"
@@ -544,7 +547,7 @@ with left_main:
         f"{minutes:02d}m {seconds:02d}s"
     )
 
-    # ================= FEEDER STATUS HISTORY =================
+    # ================= HISTORY TABLE =================
 
     st.write("---")
 
@@ -601,7 +604,8 @@ with right_main:
         if (
             len(st.session_state.warning_history) == 0
             or
-            st.session_state.warning_history[0] != warning
+            st.session_state.warning_history[0]
+            != warning
         ):
 
             st.session_state.warning_history.insert(
@@ -666,7 +670,9 @@ font-weight:900;
 
     else:
 
-        st.success("✅ No Active Warnings")
+        st.success(
+            "✅ No Active Warnings"
+        )
 
 # ================= DOWNLOAD =================
 
