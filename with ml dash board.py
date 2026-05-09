@@ -85,6 +85,15 @@ h2,h3{
     box-shadow:0px 0px 10px rgba(255,0,0,0.4);
 }
 
+/* HISTORY CARD */
+.history-card{
+    background:#111827;
+    padding:15px;
+    border-radius:14px;
+    margin-bottom:12px;
+    border:1px solid #1f2937;
+}
+
 /* MOBILE */
 @media (max-width:768px){
 
@@ -533,23 +542,99 @@ with left_main:
         f"{minutes:02d}m {seconds:02d}s"
     )
 
-    # HISTORY
+    # ================= FEEDER HISTORY =================
 
     st.write("---")
 
-    st.subheader("📜 Event History Log")
+    st.subheader(
+        "📜 Feeder Status History (15 Minute Updates)"
+    )
 
     if st.session_state.history_log:
 
-        h_df = pd.DataFrame(
+        history_df = pd.DataFrame(
             st.session_state.history_log
         )
 
-        st.dataframe(
-            h_df,
-            use_container_width=True,
-            height=500
-        )
+        for _, row_data in history_df.head(20).iterrows():
+
+            st.markdown(f"""
+
+<div class="history-card">
+
+<div style="
+display:flex;
+justify-content:space-between;
+margin-bottom:15px;
+font-size:14px;
+font-weight:bold;
+">
+
+<div>
+📅 {row_data['Logged_Date']}
+</div>
+
+<div>
+🕒 {row_data['Logged_Time']}
+</div>
+
+</div>
+
+<div style="
+display:grid;
+grid-template-columns:repeat(4,1fr);
+gap:10px;
+">
+
+<div style="
+background:#1e293b;
+padding:10px;
+border-radius:10px;
+text-align:center;
+">
+📡 F1
+<br>
+{row_data['F1']}
+</div>
+
+<div style="
+background:#1e293b;
+padding:10px;
+border-radius:10px;
+text-align:center;
+">
+📡 F2
+<br>
+{row_data['F2']}
+</div>
+
+<div style="
+background:#1e293b;
+padding:10px;
+border-radius:10px;
+text-align:center;
+">
+📡 F3
+<br>
+{row_data['F3']}
+</div>
+
+<div style="
+background:#1e293b;
+padding:10px;
+border-radius:10px;
+text-align:center;
+">
+📡 F4
+<br>
+{row_data['F4']}
+</div>
+
+</div>
+
+</div>
+
+""", unsafe_allow_html=True)
 
 # ================= RIGHT PANEL =================
 
