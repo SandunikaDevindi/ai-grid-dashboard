@@ -5,7 +5,7 @@ import os
 import joblib
 from datetime import datetime
 
-# ---------------- PAGE CONFIG ----------------
+# ================= PAGE CONFIG =================
 
 st.set_page_config(
     page_title="AI-Powered Live Grid Monitor",
@@ -13,11 +13,12 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# ---------------- RESPONSIVE CSS ----------------
+# ================= RESPONSIVE CSS =================
 
 st.markdown("""
 <style>
 
+/* MAIN APP */
 .stApp{
     background-color:#0b1220;
     color:white;
@@ -32,14 +33,16 @@ st.markdown("""
     max-width:100%;
 }
 
-/* TITLES */
+/* TITLE */
 h1{
-    font-size: clamp(28px,4vw,52px) !important;
-    color:white !important;
+    font-size:clamp(26px,4vw,52px)!important;
+    color:white!important;
 }
 
+/* SUBHEADINGS */
 h2,h3{
-    color:white !important;
+    color:white!important;
+    font-size:clamp(18px,2vw,30px)!important;
 }
 
 /* METRIC BOX */
@@ -52,7 +55,7 @@ h2,h3{
 
 /* METRIC VALUE */
 [data-testid="stMetricValue"]{
-    font-size: clamp(18px,2vw,40px);
+    font-size:clamp(18px,2vw,40px);
 }
 
 /* SCENARIO BOX */
@@ -62,52 +65,62 @@ h2,h3{
     text-align:center;
     font-weight:bold;
     color:white;
-    font-size:14px;
+    font-size:clamp(10px,1vw,18px);
+}
+
+/* WARNING CARD */
+.warning-card{
+    background:#ff0000;
+    color:white;
+    border-radius:18px;
+    padding:18px;
+    margin-bottom:15px;
+    box-shadow:0px 0px 10px rgba(255,0,0,0.4);
 }
 
 /* MOBILE */
 @media (max-width:768px){
 
     .block-container{
-        padding-left:0.6rem !important;
-        padding-right:0.6rem !important;
-        padding-top:0.5rem !important;
+        padding-left:0.7rem!important;
+        padding-right:0.7rem!important;
+        padding-top:0.5rem!important;
     }
 
     h1{
-        font-size:26px !important;
+        font-size:28px!important;
     }
 
     h2,h3{
-        font-size:18px !important;
+        font-size:18px!important;
     }
 
     [data-testid="metric-container"]{
-        padding:10px !important;
+        padding:10px!important;
     }
 
     .scenario-box{
-        font-size:11px !important;
-        padding:8px !important;
+        padding:8px!important;
+        font-size:11px!important;
+    }
+
+    .warning-card{
+        padding:12px!important;
     }
 }
 
 </style>
 """, unsafe_allow_html=True)
 
-# ---------------- FILE PATHS ----------------
+# ================= FILE PATHS =================
 
 DATASET_PATH = "AI_Grid_Anomaly_Dataset_for_dash_board.csv"
-
 MODEL_PATH = "xgb_model.pkl"
-
 ENCODER_PATH = "label_encoder.pkl"
-
 HISTORY_FILE = "grid_history_log.xlsx"
-
 STATE_FILE = "grid_state.csv"
 
-# ---------------- CHECK FILES ----------------
+# ================= CHECK FILES =================
 
 required_files = [
     DATASET_PATH,
@@ -122,7 +135,7 @@ for file in required_files:
         st.error(f"❌ File Not Found: {file}")
         st.stop()
 
-# ---------------- LOAD DATA ----------------
+# ================= LOAD DATA =================
 
 @st.cache_data
 def load_data():
@@ -131,31 +144,26 @@ def load_data():
 
 df = load_data()
 
-# ---------------- LOAD MODEL ----------------
+# ================= LOAD MODEL =================
 
 model = joblib.load(MODEL_PATH)
-
 label_encoder = joblib.load(ENCODER_PATH)
 
-# ---------------- LOAD HISTORY ----------------
+# ================= LOAD HISTORY =================
 
 def load_history():
 
     if os.path.exists(HISTORY_FILE):
 
         try:
-
-            return pd.read_excel(
-                HISTORY_FILE
-            ).to_dict("records")
+            return pd.read_excel(HISTORY_FILE).to_dict("records")
 
         except:
-
             return []
 
     return []
 
-# ---------------- SAVE HISTORY ----------------
+# ================= SAVE HISTORY =================
 
 def save_history():
 
@@ -166,7 +174,7 @@ def save_history():
         index=False
     )
 
-# ---------------- LOAD STATE ----------------
+# ================= LOAD STATE =================
 
 def load_state():
 
@@ -179,10 +187,10 @@ def load_state():
             return {
 
                 "row_index":
-                int(state_df.loc[0, "row_index"]),
+                int(state_df.loc[0,"row_index"]),
 
                 "next_update_time":
-                float(state_df.loc[0, "next_update_time"])
+                float(state_df.loc[0,"next_update_time"])
             }
 
         except:
@@ -191,7 +199,7 @@ def load_state():
 
     return None
 
-# ---------------- SAVE STATE ----------------
+# ================= SAVE STATE =================
 
 def save_state():
 
@@ -208,7 +216,7 @@ def save_state():
         index=False
     )
 
-# ---------------- SESSION STATES ----------------
+# ================= SESSION STATES =================
 
 saved_state = load_state()
 
@@ -246,10 +254,9 @@ if "next_update_time" not in st.session_state:
 
         save_state()
 
-# ---------------- AUTO UPDATE ----------------
+# ================= AUTO UPDATE =================
 
 update_interval = 15 * 60
-
 current_time = time.time()
 
 if current_time >= st.session_state.next_update_time:
@@ -258,19 +265,17 @@ if current_time >= st.session_state.next_update_time:
         st.session_state.row_index + 1
     ) % len(df)
 
-    st.session_state.next_update_time += (
-        update_interval
-    )
+    st.session_state.next_update_time += update_interval
 
     save_state()
 
-# ---------------- CURRENT ROW ----------------
+# ================= CURRENT ROW =================
 
 row = df.iloc[
     st.session_state.row_index
 ]
 
-# ---------------- ML PREDICTION ----------------
+# ================= ML PREDICTION =================
 
 input_data = pd.DataFrame([{
 
@@ -293,7 +298,7 @@ prediction = label_encoder.inverse_transform(
     [prediction_encoded]
 )[0]
 
-# ---------------- FEEDER ----------------
+# ================= FEEDER =================
 
 faulty_f = ""
 
@@ -303,7 +308,7 @@ if pd.notna(row["Fault_Feeder"]):
         row["Fault_Feeder"]
     ).strip()
 
-# ---------------- HISTORY ----------------
+# ================= HISTORY =================
 
 latest_time = datetime.now().strftime("%H:%M")
 
@@ -327,7 +332,7 @@ if not exists:
         latest_time
     }
 
-    for i in range(1, 5):
+    for i in range(1,5):
 
         feeder = f"F{i}"
 
@@ -350,12 +355,38 @@ if not exists:
 
     save_history()
 
-# ---------------- RESPONSIVE LAYOUT ----------------
+# ================= RESPONSIVE LAYOUT =================
 
-left_main = st.container()
-right_main = st.container()
+is_mobile = False
 
-# ================= LEFT =================
+try:
+
+    user_agent = st.context.headers.get("User-Agent","")
+
+    mobile_keywords = [
+        "iphone",
+        "android",
+        "mobile"
+    ]
+
+    is_mobile = any(
+        word in user_agent.lower()
+        for word in mobile_keywords
+    )
+
+except:
+    pass
+
+if not is_mobile:
+
+    left_main, right_main = st.columns([2.7,1.3])
+
+else:
+
+    left_main = st.container()
+    right_main = st.container()
+
+# ================= LEFT PANEL =================
 
 with left_main:
 
@@ -363,9 +394,7 @@ with left_main:
 
     with c1:
 
-        st.title(
-            "⚡ AI-Powered Live Grid Monitor"
-        )
+        st.title("⚡ AI-Powered Live Grid Monitor")
 
         st.subheader(
             f"AI Prediction: {prediction}"
@@ -411,17 +440,15 @@ with left_main:
 
     st.write("---")
 
-    st.subheader(
-        "📡 Feeder Line Status"
-    )
+    st.subheader("📡 Feeder Line Status")
 
     feeder_cols = st.columns(4)
 
-    for i in range(1, 5):
+    for i in range(1,5):
 
         feeder = f"F{i}"
 
-        with feeder_cols[i - 1]:
+        with feeder_cols[i-1]:
 
             if (
                 prediction.lower() != "normal"
@@ -457,11 +484,7 @@ with left_main:
 
     for idx, s in enumerate(scenarios):
 
-        active = (
-            s.lower()
-            in
-            prediction.lower()
-        )
+        active = s.lower() in prediction.lower()
 
         color = (
             "#ff4b4b"
@@ -487,7 +510,6 @@ with left_main:
     )
 
     if time_left < 0:
-
         time_left = 0
 
     minutes = time_left // 60
@@ -502,9 +524,7 @@ with left_main:
 
     st.write("---")
 
-    st.subheader(
-        "📜 Event History Log"
-    )
+    st.subheader("📜 Event History Log")
 
     if st.session_state.history_log:
 
@@ -518,11 +538,9 @@ with left_main:
             height=500
         )
 
-# ================= WARNING PANEL =================
+# ================= RIGHT PANEL =================
 
 with right_main:
-
-    st.write("---")
 
     st.subheader("🚨 Warning Panel")
 
@@ -546,8 +564,7 @@ with right_main:
         if (
             len(st.session_state.warning_history) == 0
             or
-            st.session_state.warning_history[0]
-            != warning
+            st.session_state.warning_history[0] != warning
         ):
 
             st.session_state.warning_history.insert(
@@ -561,14 +578,7 @@ with right_main:
 
             st.markdown(f"""
 
-<div style="
-background:#FF0000;
-color:white;
-border-radius:18px;
-padding:20px;
-margin-bottom:15px;
-box-shadow:0px 0px 10px rgba(255,0,0,0.4);
-">
+<div class="warning-card">
 
 <div style="
 text-align:center;
@@ -619,11 +629,9 @@ font-weight:900;
 
     else:
 
-        st.success(
-            "✅ No Active Warnings"
-        )
+        st.success("✅ No Active Warnings")
 
-# ---------------- DOWNLOAD ----------------
+# ================= DOWNLOAD =================
 
 st.write("---")
 
@@ -647,7 +655,7 @@ with open(excel_file, "rb") as file:
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
 
-# ---------------- AUTO REFRESH ----------------
+# ================= AUTO REFRESH =================
 
 time.sleep(1)
 
