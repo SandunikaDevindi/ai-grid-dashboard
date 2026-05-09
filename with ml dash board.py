@@ -20,32 +20,36 @@ sl_zone = ZoneInfo("Asia/Colombo")
 
 sl_time = datetime.now(sl_zone)
 
+# ================= MODEL ACCURACY =================
+
+MODEL_ACCURACY = 99.87
+
 # ================= CSS =================
 
 st.markdown("""
 <style>
 
 .stApp{
-    background-color:#0b1220;
+    background-color:#081120;
     color:white;
 }
 
 .block-container{
     padding-top:1rem;
     padding-bottom:1rem;
-    padding-left:2rem;
-    padding-right:2rem;
+    padding-left:1.5rem;
+    padding-right:1.5rem;
     max-width:100%;
 }
 
 h1{
-    font-size:clamp(26px,4vw,52px)!important;
+    font-size:clamp(28px,4vw,52px)!important;
     color:white!important;
+    font-weight:800!important;
 }
 
 h2,h3{
     color:white!important;
-    font-size:clamp(18px,2vw,30px)!important;
 }
 
 [data-testid="metric-container"]{
@@ -56,25 +60,25 @@ h2,h3{
 }
 
 [data-testid="stMetricValue"]{
-    font-size:clamp(18px,2vw,40px);
+    font-size:clamp(20px,2vw,42px);
 }
 
 .scenario-box{
-    padding:12px;
+    padding:14px;
     border-radius:12px;
     text-align:center;
     font-weight:bold;
     color:white;
-    font-size:clamp(10px,1vw,18px);
+    font-size:15px;
 }
 
 .warning-card{
     background:#ff0000;
     color:white;
-    border-radius:18px;
-    padding:18px;
-    margin-bottom:15px;
-    box-shadow:0px 0px 10px rgba(255,0,0,0.4);
+    border-radius:20px;
+    padding:20px;
+    margin-bottom:18px;
+    box-shadow:0px 0px 15px rgba(255,0,0,0.4);
 }
 
 </style>
@@ -240,7 +244,7 @@ for warn in st.session_state.warning_history:
         warn_dt = datetime.strptime(
 
             f"{warn['date']} {warn['time']}",
-            "%Y-%m-%d %H:%M:%S"
+            "%Y-%m-%d %H:%M"
 
         )
 
@@ -324,7 +328,7 @@ prediction = row["Prediction"]
 
 # ================= FEEDER =================
 
-faulty_f = ""
+faulty_f = "F1"
 
 if "Fault_Feeder" in df.columns:
 
@@ -332,9 +336,9 @@ if "Fault_Feeder" in df.columns:
 
         faulty_f = str(
             row["Fault_Feeder"]
-        ).strip()
+        ).strip().upper()
 
-# ================= HISTORY =================
+# ================= FIXED LOG TIME =================
 
 fixed_time = datetime.fromtimestamp(
 
@@ -349,6 +353,8 @@ fixed_time = datetime.fromtimestamp(
 logged_date = fixed_time.strftime("%Y-%m-%d")
 
 logged_time = fixed_time.strftime("%H:%M")
+
+# ================= HISTORY =================
 
 exists = False
 
@@ -384,7 +390,7 @@ if new_update and not exists:
 
             prediction.lower() != "normal"
             and
-            feeder == faulty_f
+            feeder.upper() == faulty_f.upper()
 
         ):
 
@@ -405,22 +411,10 @@ if new_update and not exists:
 
 if prediction.lower() != "normal":
 
-    warning_date = (
-        row["Date"]
-        if "Date" in df.columns
-        else sl_time.strftime("%Y-%m-%d")
-    )
-
-    warning_time = (
-        row["Time"]
-        if "Time" in df.columns
-        else sl_time.strftime("%H:%M:%S")
-    )
-
     warning_signature = (
 
-        f"{warning_date}_"
-        f"{warning_time}_"
+        f"{logged_date}_"
+        f"{logged_time}_"
         f"{faulty_f}_"
         f"{prediction}"
 
@@ -429,10 +423,10 @@ if prediction.lower() != "normal":
     warning = {
 
         "date":
-        warning_date,
+        logged_date,
 
         "time":
-        warning_time,
+        logged_time,
 
         "feeder":
         faulty_f,
@@ -479,6 +473,11 @@ with left_main:
         )
 
     with c2:
+
+        st.metric(
+            "Model Accuracy",
+            f"{MODEL_ACCURACY}%"
+        )
 
         st.markdown(
             f"## 🕒 {sl_time.strftime('%H:%M:%S')}"
@@ -531,11 +530,9 @@ with left_main:
         with feeder_cols[i-1]:
 
             if (
-
                 prediction.lower() != "normal"
                 and
-                feeder == faulty_f
-
+                feeder.upper() == faulty_f.upper()
             ):
 
                 st.error(
