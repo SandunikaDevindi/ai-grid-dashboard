@@ -16,9 +16,9 @@ st.set_page_config(
 
 # ================= SRI LANKA TIME =================
 
-sl_time = datetime.now(
-    ZoneInfo("Asia/Colombo")
-)
+sl_zone = ZoneInfo("Asia/Colombo")
+
+sl_time = datetime.now(sl_zone)
 
 # ================= CSS =================
 
@@ -77,45 +77,19 @@ h2,h3{
     box-shadow:0px 0px 10px rgba(255,0,0,0.4);
 }
 
-@media (max-width:768px){
-
-    .block-container{
-        padding-left:0.7rem!important;
-        padding-right:0.7rem!important;
-        padding-top:0.5rem!important;
-    }
-
-    h1{
-        font-size:28px!important;
-    }
-
-    h2,h3{
-        font-size:18px!important;
-    }
-
-    [data-testid="metric-container"]{
-        padding:10px!important;
-    }
-
-    .scenario-box{
-        padding:8px!important;
-        font-size:11px!important;
-    }
-
-    .warning-card{
-        padding:12px!important;
-    }
-}
-
 </style>
 """, unsafe_allow_html=True)
 
 # ================= FILE PATHS =================
 
 DATASET_PATH = "future_grid_test_dataset.csv"
+
 MODEL_PATH = "xgb_model.pkl"
+
 ENCODER_PATH = "label_encoder.pkl"
+
 HISTORY_FILE = "grid_history_log.xlsx"
+
 STATE_FILE = "grid_state.csv"
 
 # ================= CHECK FILES =================
@@ -148,7 +122,7 @@ model = joblib.load(MODEL_PATH)
 
 label_encoder = joblib.load(ENCODER_PATH)
 
-# ================= PREDICT ALL DATA =================
+# ================= ALL PREDICTIONS =================
 
 predict_df = df[
     [
@@ -249,6 +223,43 @@ if "warning_history" not in st.session_state:
 
     st.session_state.warning_history = []
 
+# ================= REMOVE WARNINGS OLDER THAN 48 HOURS =================
+
+filtered_warnings = []
+
+current_dt = datetime.now(sl_zone)
+
+for warn in st.session_state.warning_history:
+
+    try:
+
+        warn_dt = datetime.strptime(
+
+            f"{warn['date']} {warn['time']}",
+            "%Y-%m-%d %H:%M:%S"
+
+        )
+
+        warn_dt = warn_dt.replace(
+            tzinfo=sl_zone
+        )
+
+        diff_hours = (
+            current_dt - warn_dt
+        ).total_seconds() / 3600
+
+        if diff_hours <= 48:
+
+            filtered_warnings.append(warn)
+
+    except:
+
+        filtered_warnings.append(warn)
+
+st.session_state.warning_history = filtered_warnings
+
+# ================= ROW INDEX =================
+
 if "row_index" not in st.session_state:
 
     if saved_state:
@@ -258,6 +269,8 @@ if "row_index" not in st.session_state:
     else:
 
         st.session_state.row_index = 0
+
+# ================= NEXT UPDATE =================
 
 if "next_update_time" not in st.session_state:
 
@@ -289,7 +302,9 @@ if current_time >= st.session_state.next_update_time:
         st.session_state.row_index + 1
     ) % len(df)
 
-    st.session_state.next_update_time += update_interval
+    st.session_state.next_update_time += (
+        update_interval
+    )
 
     save_state()
 
@@ -318,8 +333,13 @@ if "Fault_Feeder" in df.columns:
 # ================= HISTORY =================
 
 fixed_time = datetime.fromtimestamp(
-    st.session_state.next_update_time - update_interval,
-    ZoneInfo("Asia/Colombo")
+
+    st.session_state.next_update_time
+    -
+    update_interval,
+
+    sl_zone
+
 )
 
 logged_date = fixed_time.strftime("%Y-%m-%d")
@@ -331,9 +351,11 @@ exists = False
 for item in st.session_state.history_log:
 
     if (
+
         item["Logged_Date"] == logged_date
         and
         item["Logged_Time"] == logged_time
+
     ):
 
         exists = True
@@ -355,9 +377,11 @@ if new_update and not exists:
         feeder = f"F{i}"
 
         if (
+
             prediction.lower() != "normal"
             and
             feeder == faulty_f
+
         ):
 
             history_entry[feeder] = prediction
@@ -372,6 +396,63 @@ if new_update and not exists:
     )
 
     save_history()
+
+# ================= WARNING STORAGE =================
+
+if prediction.lower() != "normal":
+
+    warning_date = (
+        row["Date"]
+        if "Date" in df.columns
+        else sl_time.strftime("%Y-%m-%d")
+    )
+
+    warning_time = (
+        row["Time"]
+        if "Time" in df.columns
+        else sl_time.strftime("%H:%M:%S")
+    )
+
+    warning = {
+
+        "date":
+        warning_date,
+
+        "time":
+        warning_time,
+
+        "feeder":
+        faulty_f,
+
+        "fault":
+        prediction
+    }
+
+    already_exists = False
+
+    for old_warn in st.session_state.warning_history:
+
+        if (
+
+            old_warn["date"] == warning["date"]
+            and
+            old_warn["time"] == warning["time"]
+            and
+            old_warn["feeder"] == warning["feeder"]
+            and
+            old_warn["fault"] == warning["fault"]
+
+        ):
+
+            already_exists = True
+            break
+
+    if not already_exists:
+
+        st.session_state.warning_history.insert(
+            0,
+            warning
+        )
 
 # ================= LAYOUT =================
 
@@ -429,7 +510,7 @@ with left_main:
         "0.88"
     )
 
-    # ================= FEEDERS =================
+    # ================= FEEDER STATUS =================
 
     st.write("---")
 
@@ -446,9 +527,11 @@ with left_main:
         with feeder_cols[i-1]:
 
             if (
+
                 prediction.lower() != "normal"
                 and
                 feeder == faulty_f
+
             ):
 
                 st.error(
@@ -582,40 +665,13 @@ with left_main:
 
 with right_main:
 
-    st.subheader("🚨 Warning Panel")
-
-    if prediction.lower() != "normal":
-
-        warning = {
-
-            "date":
-            row["Date"] if "Date" in df.columns else sl_time.strftime("%Y-%m-%d"),
-
-            "time":
-            row["Time"] if "Time" in df.columns else sl_time.strftime("%H:%M:%S"),
-
-            "feeder":
-            faulty_f,
-
-            "fault":
-            prediction
-        }
-
-        if (
-            len(st.session_state.warning_history) == 0
-            or
-            st.session_state.warning_history[0]
-            != warning
-        ):
-
-            st.session_state.warning_history.insert(
-                0,
-                warning
-            )
+    st.subheader(
+        "🚨 Warning Panel"
+    )
 
     if len(st.session_state.warning_history) > 0:
 
-        for warn in st.session_state.warning_history[:10]:
+        for warn in st.session_state.warning_history[:20]:
 
             st.markdown(f"""
 
