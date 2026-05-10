@@ -639,7 +639,7 @@ with left_main:
         f"{minutes:02d}m {seconds:02d}s"
     )
 
-    # ================= HISTORY TABLE =================
+    # ================= FEEDER STATUS HISTORY =================
 
     st.write("---")
 
@@ -667,7 +667,62 @@ with left_main:
             ],
 
             use_container_width=True,
-            height=400
+            height=350
+        )
+
+    # ================= ANOMALY EVENT HISTORY =================
+
+    st.write("---")
+
+    st.subheader(
+        "🚨 Anomaly Event History"
+    )
+
+    anomaly_records = []
+
+    for item in st.session_state.history_log:
+
+        for feeder in ["F1", "F2", "F3", "F4"]:
+
+            value = item[feeder]
+
+            if str(value).lower() != "normal":
+
+                anomaly_records.append({
+
+                    "Date":
+                    item["Logged_Date"],
+
+                    "Time":
+                    item["Logged_Time"],
+
+                    "Feeder":
+                    feeder,
+
+                    "Anomaly":
+                    value
+
+                })
+
+    if len(anomaly_records) > 0:
+
+        anomaly_df = pd.DataFrame(
+            anomaly_records
+        )
+
+        st.dataframe(
+
+            anomaly_df,
+
+            use_container_width=True,
+            height=300
+
+        )
+
+    else:
+
+        st.success(
+            "✅ No anomaly events detected"
         )
 
 # ================= RIGHT PANEL =================
