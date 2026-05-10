@@ -96,6 +96,8 @@ HISTORY_FILE = "grid_history_log.xlsx"
 
 STATE_FILE = "grid_state.csv"
 
+WARNING_FILE = "warnings.csv"
+
 # ================= CHECK FILES =================
 
 required_files = [
@@ -223,15 +225,31 @@ if "history_log" not in st.session_state:
 
     st.session_state.history_log = load_history()
 
-if "warning_history" not in st.session_state:
-
-    st.session_state.warning_history = []
-
 if "last_warning_signature" not in st.session_state:
 
     st.session_state.last_warning_signature = None
 
-# ================= REMOVE WARNINGS OLDER THAN 48 HOURS =================
+# ================= LOAD WARNINGS =================
+
+if os.path.exists(WARNING_FILE):
+
+    try:
+
+        warnings_df = pd.read_csv(WARNING_FILE)
+
+        st.session_state.warning_history = (
+            warnings_df.to_dict("records")
+        )
+
+    except:
+
+        st.session_state.warning_history = []
+
+else:
+
+    st.session_state.warning_history = []
+
+# ================= REMOVE WARNINGS AFTER 48 HOURS =================
 
 filtered_warnings = []
 
@@ -265,6 +283,13 @@ for warn in st.session_state.warning_history:
         filtered_warnings.append(warn)
 
 st.session_state.warning_history = filtered_warnings
+
+pd.DataFrame(
+    filtered_warnings
+).to_csv(
+    WARNING_FILE,
+    index=False
+)
 
 # ================= ROW INDEX =================
 
@@ -446,6 +471,15 @@ if prediction.lower() != "normal":
         st.session_state.warning_history.insert(
             0,
             warning
+        )
+
+        warnings_df = pd.DataFrame(
+            st.session_state.warning_history
+        )
+
+        warnings_df.to_csv(
+            WARNING_FILE,
+            index=False
         )
 
         st.session_state.last_warning_signature = (
