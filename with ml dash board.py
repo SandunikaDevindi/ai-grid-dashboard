@@ -3,7 +3,6 @@ import pandas as pd
 import time
 import os
 import joblib
-import pygame
 
 from datetime import datetime
 from zoneinfo import ZoneInfo
@@ -18,12 +17,6 @@ st.set_page_config(
 
     initial_sidebar_state="collapsed"
 )
-
-# ================= SOUND INIT =================
-
-pygame.mixer.init()
-
-WARNING_SOUND = "warning_alarm.mp3"
 
 # ================= SRI LANKA TIME =================
 
@@ -222,62 +215,6 @@ if "Fault_Feeder" in df.columns:
 
         ).strip().upper()
 
-# ================= SESSION STATES =================
-
-if "alarm_active" not in st.session_state:
-
-    st.session_state.alarm_active = False
-
-if "alarm_start_time" not in st.session_state:
-
-    st.session_state.alarm_start_time = None
-
-if "alarm_muted" not in st.session_state:
-
-    st.session_state.alarm_muted = False
-
-# ================= ALARM SYSTEM =================
-
-current_time = time.time()
-
-if prediction.lower() != "normal":
-
-    if not st.session_state.alarm_active:
-
-        st.session_state.alarm_active = True
-
-        st.session_state.alarm_start_time = current_time
-
-        st.session_state.alarm_muted = False
-
-        if not pygame.mixer.music.get_busy():
-
-            pygame.mixer.music.load(
-
-                WARNING_SOUND
-            )
-
-            pygame.mixer.music.play(-1)
-
-    elapsed = (
-
-        current_time
-        -
-        st.session_state.alarm_start_time
-    )
-
-    if elapsed >= 30:
-
-        pygame.mixer.music.stop()
-
-        st.session_state.alarm_active = False
-
-else:
-
-    pygame.mixer.music.stop()
-
-    st.session_state.alarm_active = False
-
 # ================= HEADER =================
 
 left_main, right_main = st.columns([2.7,1.3])
@@ -441,21 +378,11 @@ with left_main:
             unsafe_allow_html=True
         )
 
-    # ================= ALARM BUTTON =================
+    # ================= MUTE BUTTON =================
 
     st.write("---")
 
-    if st.session_state.alarm_active:
-
-        if st.button("🔕 Mute Alarm"):
-
-            pygame.mixer.music.stop()
-
-            st.session_state.alarm_active = False
-
-            st.session_state.alarm_muted = True
-
-            st.success("✅ Alarm Muted")
+    mute_alarm = st.button("🔕 Mute Alarm")
 
 # ================= RIGHT PANEL =================
 
@@ -467,6 +394,20 @@ with right_main:
     )
 
     if prediction.lower() != "normal":
+
+        # ================= SOUND =================
+
+        if not mute_alarm:
+
+            st.markdown("""
+
+            <audio autoplay>
+                <source src="https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3" type="audio/mpeg">
+            </audio>
+
+            """, unsafe_allow_html=True)
+
+        # ================= WARNING CARD =================
 
         st.markdown(f"""
 
