@@ -18,11 +18,9 @@ st.set_page_config(
 
 sl_zone = ZoneInfo("Asia/Colombo")
 
-sl_time = datetime.now(sl_zone)
-
 # ================= MODEL ACCURACY =================
 
-MODEL_ACCURACY = 99.87
+MODEL_ACCURACY = 99.91
 
 # ================= CSS =================
 
@@ -87,15 +85,10 @@ h2,h3{
 # ================= FILE PATHS =================
 
 DATASET_PATH = "future_grid_test_dataset.csv"
-
-MODEL_PATH = "xgb_model.pkl"
-
+MODEL_PATH = "rf_model.pkl"
 ENCODER_PATH = "label_encoder.pkl"
-
 HISTORY_FILE = "grid_history_log.xlsx"
-
 STATE_FILE = "grid_state.csv"
-
 WARNING_FILE = "warnings.csv"
 
 # ================= CHECK FILES =================
@@ -128,7 +121,7 @@ model = joblib.load(MODEL_PATH)
 
 label_encoder = joblib.load(ENCODER_PATH)
 
-# ================= PREDICT ALL DATA =================
+# ================= PREDICT =================
 
 predict_df = df[
     [
@@ -513,6 +506,8 @@ with left_main:
             f"{MODEL_ACCURACY}%"
         )
 
+        sl_time = datetime.now(sl_zone)
+
         st.markdown(
             f"## 🕒 {sl_time.strftime('%H:%M:%S')}"
         )
@@ -589,11 +584,10 @@ with left_main:
         "Theft",
         "Power_Cut",
         "Ground_Fault",
-        "Branch_Touching",
         "Lightning"
     ]
 
-    s_cols = st.columns(6)
+    s_cols = st.columns(5)
 
     for idx, s in enumerate(scenarios):
 
