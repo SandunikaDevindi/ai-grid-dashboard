@@ -131,7 +131,7 @@ model = joblib.load(MODEL_PATH)
 
 label_encoder = joblib.load(ENCODER_PATH)
 
-# ================= PREDICT ALL DATA =================
+# ================= PREDICT =================
 
 predict_df = df[
     [
@@ -251,48 +251,6 @@ if os.path.exists(WARNING_FILE):
 else:
 
     st.session_state.warning_history = []
-
-# ================= REMOVE WARNINGS AFTER 48 HOURS =================
-
-filtered_warnings = []
-
-current_dt = datetime.now(sl_zone)
-
-for warn in st.session_state.warning_history:
-
-    try:
-
-        warn_dt = datetime.strptime(
-
-            f"{warn['date']} {warn['time']}",
-            "%Y-%m-%d %H:%M"
-
-        )
-
-        warn_dt = warn_dt.replace(
-            tzinfo=sl_zone
-        )
-
-        diff_hours = (
-            current_dt - warn_dt
-        ).total_seconds() / 3600
-
-        if diff_hours <= 48:
-
-            filtered_warnings.append(warn)
-
-    except:
-
-        filtered_warnings.append(warn)
-
-st.session_state.warning_history = filtered_warnings
-
-pd.DataFrame(
-    filtered_warnings
-).to_csv(
-    WARNING_FILE,
-    index=False
-)
 
 # ================= ROW INDEX =================
 
@@ -674,61 +632,6 @@ with left_main:
             height=350
         )
 
-    # ================= ANOMALY EVENT HISTORY =================
-
-    st.write("---")
-
-    st.subheader(
-        "🚨 Anomaly Event History"
-    )
-
-    anomaly_records = []
-
-    for item in st.session_state.history_log:
-
-        for feeder in ["F1", "F2", "F3", "F4"]:
-
-            value = item[feeder]
-
-            if str(value).lower() != "normal":
-
-                anomaly_records.append({
-
-                    "Date":
-                    item["Logged_Date"],
-
-                    "Time":
-                    item["Logged_Time"],
-
-                    "Feeder":
-                    feeder,
-
-                    "Anomaly":
-                    value
-
-                })
-
-    if len(anomaly_records) > 0:
-
-        anomaly_df = pd.DataFrame(
-            anomaly_records
-        )
-
-        st.dataframe(
-
-            anomaly_df,
-
-            use_container_width=True,
-            height=300
-
-        )
-
-    else:
-
-        st.success(
-            "✅ No anomaly events detected"
-        )
-
 # ================= RIGHT PANEL =================
 
 with right_main:
@@ -739,63 +642,82 @@ with right_main:
 
     if len(st.session_state.warning_history) > 0:
 
-        # ================= WARNING SOUND =================
+        latest_warn = st.session_state.warning_history[0]
 
-        st.markdown("""
+        # ================= SOUND ALERT =================
 
-        <audio autoplay>
-            <source src="https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3" type="audio/mpeg">
-        </audio>
+        st.components.v1.html(
+            """
+            <script>
 
-        """, unsafe_allow_html=True)
+            var audio = new Audio(
+            "https://www.soundjay.com/misc/sounds/alarm.wav"
+            );
 
-        for warn in st.session_state.warning_history[:20]:
+            audio.play();
 
-            st.markdown(f"""
+            </script>
+            """,
+            height=0
+        )
+
+        # ================= WARNING CARD =================
+
+        st.markdown(f"""
 
 <div class="warning-card">
 
 <div style="
 text-align:center;
-font-size:24px;
+font-size:26px;
 font-weight:bold;
 margin-bottom:20px;
+color:white;
 ">
+
 ⚠ WARNING DETECTED ⚠
+
 </div>
 
 <div style="
 display:flex;
 justify-content:space-between;
-font-size:15px;
+font-size:16px;
 margin-bottom:15px;
+color:white;
 ">
 
 <div>
-📅 {warn['date']}
+📅 {latest_warn['date']}
 </div>
 
 <div>
-🕒 {warn['time']}
+🕒 {latest_warn['time']}
 </div>
 
 </div>
 
 <div style="
 text-align:center;
-font-size:22px;
+font-size:24px;
 font-weight:bold;
-margin-bottom:10px;
+margin-bottom:15px;
+color:white;
 ">
-📡 {warn['feeder']}
+
+📡 {latest_warn['feeder']}
+
 </div>
 
 <div style="
 text-align:center;
-font-size:26px;
+font-size:30px;
 font-weight:900;
+color:white;
 ">
-🚨 {warn['fault']}
+
+🚨 {latest_warn['fault']}
+
 </div>
 
 </div>
