@@ -77,16 +77,6 @@ h2,h3{
     padding:20px;
     margin-bottom:18px;
     box-shadow:0px 0px 15px rgba(255,0,0,0.4);
-    animation: blink 0.5s infinite;
-}
-
-@keyframes blink {
-
-    0% {opacity:1;}
-
-    50% {opacity:0.4;}
-
-    100% {opacity:1;}
 }
 
 </style>
