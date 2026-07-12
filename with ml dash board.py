@@ -625,99 +625,46 @@ with left_main:
 
 with right_main:
 
-    st.subheader(
-        "🚨 Warning Panel"
-    )
+    st.subheader("🚨 Warning Panel")
 
     if len(st.session_state.warning_history) > 0:
-
-        latest_warn = st.session_state.warning_history[0]
-
-        # ================= SOUND ALERT =================
 
         st.components.v1.html(
             """
             <script>
-
-            var audio = new Audio(
-            "https://www.soundjay.com/misc/sounds/alarm.wav"
-            );
-
+            var audio = new Audio("https://www.soundjay.com/misc/sounds/alarm.wav");
             audio.play();
-
             </script>
             """,
             height=0
         )
 
-        # ================= WARNING CARD =================
+        for latest_warn in st.session_state.warning_history[:5]:
 
-        st.markdown(f"""
-
+            st.markdown(f"""
 <div class="warning-card">
 
-<div style="
-text-align:center;
-font-size:26px;
-font-weight:bold;
-margin-bottom:20px;
-color:white;
-">
-
-⚠ WARNING DETECTED ⚠
-
+<div style="text-align:center;font-size:22px;font-weight:bold;margin-bottom:15px;">
+⚠ WARNING DETECTED
 </div>
 
-<div style="
-display:flex;
-justify-content:space-between;
-font-size:16px;
-margin-bottom:15px;
-color:white;
-">
+<div>📅 {latest_warn['date']}</div>
+<div>🕒 {latest_warn['time']}</div>
 
-<div>
-📅 {latest_warn['date']}
+<div style="margin-top:10px;">
+📡 <b>{latest_warn['feeder']}</b>
 </div>
 
-<div>
-🕒 {latest_warn['time']}
-</div>
-
-</div>
-
-<div style="
-text-align:center;
-font-size:24px;
-font-weight:bold;
-margin-bottom:15px;
-color:white;
-">
-
-📡 {latest_warn['feeder']}
-
-</div>
-
-<div style="
-text-align:center;
-font-size:30px;
-font-weight:900;
-color:white;
-">
-
+<div style="margin-top:15px;text-align:center;font-size:26px;font-weight:bold;">
 🚨 {latest_warn['fault']}
-
 </div>
 
 </div>
-
 """, unsafe_allow_html=True)
 
     else:
 
-        st.success(
-            "✅ No Active Warnings"
-        )
+        st.success("✅ No Active Warnings")
 
 # ================= DOWNLOAD =================
 
