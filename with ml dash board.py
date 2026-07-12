@@ -6,7 +6,7 @@ import joblib
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
-# ================= PAGE CONFIG ================
+# ================= PAGE CONFIG =================
 
 st.set_page_config(
     page_title="AI-Powered Live Grid Monitor",
@@ -281,17 +281,11 @@ new_update = False
 
 if current_time >= st.session_state.next_update_time:
 
-    st.session_state.row_index = (
-        st.session_state.row_index + 1
-    ) % len(df)
+    new_update = True
 
     st.session_state.next_update_time += (
         update_interval
     )
-
-    save_state()
-
-    new_update = True
 
 # ================= CURRENT ROW =================
 
@@ -385,6 +379,13 @@ if new_update and not exists:
     )
 
     save_history()
+
+
+    st.session_state.row_index = (
+        st.session_state.row_index + 1
+    ) % len(df)
+
+    save_state()
 
 # ================= WARNING STORAGE =================
 
