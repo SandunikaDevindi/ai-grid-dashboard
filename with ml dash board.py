@@ -639,6 +639,29 @@ with right_main:
 
     if len(st.session_state.warning_history) > 0:
 
+        st.components.v1.html("""
+<script>
+(function(){
+const AC=window.AudioContext||window.webkitAudioContext;
+if(!AC)return;
+const ctx=new AC();
+function b(d){
+setTimeout(()=>{
+const o=ctx.createOscillator();
+const g=ctx.createGain();
+o.type="square";
+o.frequency.value=950;
+g.gain.value=0.2;
+o.connect(g);g.connect(ctx.destination);
+o.start();
+setTimeout(()=>o.stop(),250);
+},d);
+}
+b(0);b(400);b(800);
+})();
+</script>
+""",height=0)
+
         st.components.v1.html(
             """
             <script>
