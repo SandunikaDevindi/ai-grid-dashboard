@@ -361,7 +361,11 @@ if new_update and not exists:
 
         feeder = f"F{i}"
 
-        if (
+        if prediction.lower() == "power_cut":
+
+            history_entry[feeder] = "Power_Cut"
+
+        elif (
 
             prediction.lower() != "normal"
             and
@@ -515,7 +519,13 @@ with left_main:
 
         with feeder_cols[i-1]:
 
-            if (
+            if prediction.lower() == "power_cut":
+
+                st.error(
+                    f"🚨 Feeder 0{i}\nPower_Cut"
+                )
+
+            elif (
                 prediction.lower() != "normal"
                 and
                 feeder.upper() == faulty_f.upper()
