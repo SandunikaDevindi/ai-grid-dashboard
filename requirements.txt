@@ -1,8 +1,8 @@
-streamlit==1.59.1
-pandas==3.0.3
-joblib==1.5.3
-openpyxl==3.1.5
-xgboost==3.3.0
-scikit-learn==1.7.2
-pytz==2026.2
-streamlit-autorefresh==1.0.1
+streamlit
+pandas
+joblib
+openpyxl
+xgboost
+scikit-learn
+pytz
+streamlit-autorefresh
