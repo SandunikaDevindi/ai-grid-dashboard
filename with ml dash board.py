@@ -281,11 +281,17 @@ new_update = False
 
 if current_time >= st.session_state.next_update_time:
 
-    new_update = True
+    st.session_state.row_index = (
+        st.session_state.row_index + 1
+    ) % len(df)
 
     st.session_state.next_update_time += (
         update_interval
     )
+
+    save_state()
+
+    new_update = True
 
 # ================= CURRENT ROW =================
 
@@ -379,13 +385,6 @@ if new_update and not exists:
     )
 
     save_history()
-
-
-    st.session_state.row_index = (
-        st.session_state.row_index + 1
-    ) % len(df)
-
-    save_state()
 
 # ================= WARNING STORAGE =================
 
@@ -639,29 +638,6 @@ with right_main:
     st.subheader("🚨 Warning Panel")
 
     if len(st.session_state.warning_history) > 0:
-
-        st.components.v1.html("""
-<script>
-(function(){
-const AC=window.AudioContext||window.webkitAudioContext;
-if(!AC)return;
-const ctx=new AC();
-function b(d){
-setTimeout(()=>{
-const o=ctx.createOscillator();
-const g=ctx.createGain();
-o.type="square";
-o.frequency.value=950;
-g.gain.value=0.2;
-o.connect(g);g.connect(ctx.destination);
-o.start();
-setTimeout(()=>o.stop(),250);
-},d);
-}
-b(0);b(400);b(800);
-})();
-</script>
-""",height=0)
 
         st.components.v1.html(
             """
