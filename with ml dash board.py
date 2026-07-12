@@ -117,27 +117,26 @@ df = load_data()
 
 # ================= LOAD MODEL =================
 
-model = joblib.load(MODEL_PATH)
+try:
+    model = joblib.load(MODEL_PATH)
+    label_encoder = joblib.load(ENCODER_PATH)
 
-label_encoder = joblib.load(ENCODER_PATH)
-
-# ================= PREDICT =================
-
-predict_df = df[
-    [
-        "Voltage",
-        "Current",
-        "Transformer_kW"
+    # ================= PREDICT =================
+    predict_df = df[
+        [
+            "Voltage",
+            "Current",
+            "Transformer_kW"
+        ]
     ]
-]
 
-pred_encoded = model.predict(
-    predict_df
-)
+    pred_encoded = model.predict(predict_df)
 
-df["Prediction"] = label_encoder.inverse_transform(
-    pred_encoded
-)
+    df["Prediction"] = label_encoder.inverse_transform(pred_encoded)
+
+except Exception as e:
+    st.error(f"Prediction Error: {e}")
+    st.stop()
 
 # ================= LOAD HISTORY =================
 
@@ -618,7 +617,7 @@ with left_main:
                 ]
             ],
 
-            use_container_width=True,
+            width="stretch",
             height=350
         )
 
@@ -745,7 +744,8 @@ with open(excel_file, "rb") as file:
     )
 
 # ================= AUTO REFRESH =================
-
-time.sleep(1)
-
-st.rerun()
+try:
+    from streamlit_autorefresh import st_autorefresh
+    st_autorefresh(interval=1000, key="refresh")
+except Exception:
+    pass
