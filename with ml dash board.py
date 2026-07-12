@@ -639,15 +639,7 @@ with right_main:
 
     if len(st.session_state.warning_history) > 0:
 
-        st.components.v1.html(
-            """
-            <script>
-            var audio = new Audio("https://www.soundjay.com/misc/sounds/alarm.wav");
-            audio.play();
-            </script>
-            """,
-            height=0
-        )
+        st.audio("warning_alarm (1).mp3", autoplay=True)
 
         for latest_warn in st.session_state.warning_history[:5]:
 
